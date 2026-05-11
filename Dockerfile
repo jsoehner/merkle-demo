@@ -3,12 +3,16 @@
 # ==========================================
 FROM cgr.dev/chainguard/wolfi-base AS builder
 
-# Install build dependencies
-RUN apk add --no-cache go bash openssl build-base
+# Install build dependencies (git is needed to clone the mtc library)
+RUN apk add --no-cache go bash openssl build-base git
 
 WORKDIR /app
 
-# Copy the entire project
+# Clone the upstream MTC library — it is gitignored in this repo because it is
+# an external dependency, so we fetch it fresh at image build time.
+RUN git clone --depth=1 https://github.com/bwesterb/mtc.git mtc
+
+# Copy the rest of the project (demo/, Dockerfile, etc.)
 COPY . .
 
 # Build the mtc-cli statically

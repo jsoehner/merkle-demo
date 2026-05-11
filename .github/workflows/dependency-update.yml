@@ -3,6 +3,8 @@ name: Nightly Dependency Update
 # ──────────────────────────────────────────────────────────────────────────────
 # Runs every night at 02:00 UTC.
 # Checks whether any Go module dependencies have newer versions available.
+# Only manages demo/ — the mtc/ directory is an external gitignored dependency
+# that is cloned fresh during Docker builds (see Dockerfile).
 # If updates are found:
 #   1. Commits them back to main
 #   2. Creates a new semver git tag → triggers docker-publish.yml
@@ -41,16 +43,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          # Absolute path ensures setup-go finds the file regardless of runner CWD
-          go-version-file: ${{ github.workspace }}/mtc/go.mod
+          # demo/go.mod is the only tracked module (mtc/ is gitignored)
+          go-version-file: ${{ github.workspace }}/demo/go.mod
 
       # ── 3. Update dependencies ────────────────────────────────────────────
-      - name: Update Go modules (mtc)
-        working-directory: mtc
-        run: |
-          go get -u ./...
-          go mod tidy
-
+      # Only demo/ is tracked in this repo. The mtc/ library is an external
+      # dependency cloned fresh at Docker build time (see Dockerfile).
       - name: Update Go modules (demo)
         working-directory: demo
         run: |
