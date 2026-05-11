@@ -14,6 +14,7 @@ $MTC_CLI ca -p ca new --batch-duration 2s --lifetime 1h 62253.12.15 localhost:80
 
 echo "[2/4] Generating P-256 key for our website..."
 openssl ecparam -name prime256v1 -genkey -out website.key
+chmod 644 website.key  # Allow the server process to read the key regardless of how it's launched
 openssl ec -in website.key -pubout -out website.pub
 # Generate a self-signed X.509 cert to use standard TLS alongside MTC
 openssl req -new -x509 -key website.key -out website.pem -days 365 -subj "/CN=localhost"
