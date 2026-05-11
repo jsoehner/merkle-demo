@@ -6,7 +6,7 @@
 
 This project provides a fully self-contained, automated demonstration of **Merkle Tree Certificates (MTC)**—an experimental Internet Engineering Task Force (IETF) architectural proposal designed to fix the severe performance bottlenecks caused by massive Post-Quantum Cryptography (PQC) signature sizes in standard TLS handshakes.
 
-![Main UI showing Connection Security](./screenshots/main_ui.png)
+![Main UI showing Connection Security](./demo/screenshots/main_ui.png)
 
 ## What are Merkle Tree Certificates?
 
