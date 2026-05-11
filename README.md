@@ -27,7 +27,7 @@ The result? The internet gets quantum-level security without sacrificing the spe
 * **Live In-Browser Verification:** Real-time backend verification of the certificate's inclusion proof, mimicking an interoperable TLS client.
 * **Payload Decoder & Diagnostics:** Explore the internals of the experimental binary structures (CA Params, Validity Window, Certificate payload) right from the browser.
 
-![Payload Diagnostics & Decoded Views](./screenshots/diagnostics.png)
+![Payload Diagnostics & Decoded Views](./demo/screenshots/diagnostics.png)
 
 ## Quick Start
 
