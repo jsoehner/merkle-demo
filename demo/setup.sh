@@ -10,7 +10,7 @@ echo "=== Merkle Tree Certificates (MTC) Demo Setup ==="
 rm -rf ca website.key website.pub website-asr website.mtc website.vw website.pem
 
 echo "[1/4] Setting up Merkle Tree CA..."
-$MTC_CLI ca -p ca new --batch-duration 2s --lifetime 1h 62253.12.15 localhost:8080
+$MTC_CLI ca -p ca new --batch-duration 2s --lifetime 8760h 62253.12.15 localhost:8080
 
 echo "[2/4] Generating P-256 key for our website..."
 openssl ecparam -name prime256v1 -genkey -out website.key
