@@ -29,6 +29,12 @@ To demonstrate it, our server:
 * Exposes the MTC components statically at `/.well-known/mtc/` mimicking how an interoperable system would query them.
 * Serves a premium, glassmorphism-inspired dark mode frontend where you can visually trigger and observe the certificate inclusion proof verification as well as deeply inspect the decoded structures.
 
+### 4. Secure Containerization & CI/CD Pipeline
+To ensure the demo runs securely and consistently without manual dependencies, the entire environment is containerized using **Chainguard** hardened images.
+* **Build Stage:** Utilizes `cgr.dev/chainguard/wolfi-base` to compile the Go backend, the `mtc-cli`, and invoke the PKI generation script natively during the container build.
+* **Runtime Stage:** Employs the zero-CVE `cgr.dev/chainguard/static` distroless image to host only the statically compiled binaries and cryptographic artifacts, completely removing the attack surface of a traditional OS environment.
+* **Multi-Arch CI:** A GitHub Actions workflow securely builds this container natively for both `amd64` and `arm64` using QEMU emulation and Docker Buildx.
+
 ## How to Run the Demo
 
 To launch the web server, simply navigate to the `demo/` directory and run:
@@ -40,3 +46,9 @@ go run main.go
 
 Then, open your browser and navigate to `https://localhost:8443` (accept the self-signed X.509 warning, which acts as the TLS fallback). 
 Click the **Verify Merkle Tree Certificate** button to execute a live backend verification of the Inclusion Proof against the CA parameters.
+
+Alternatively, to run the secure Chainguard container directly without requiring Go on your host:
+```bash
+docker build -t mtc-demo:latest .
+docker run -p 8443:8443 mtc-demo:latest
+```

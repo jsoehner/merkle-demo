@@ -3,10 +3,12 @@
 [![Post-Quantum TLS Ready](https://img.shields.io/badge/Security-Post--Quantum_Ready-4f46e5.svg)](#)
 [![TLS 1.3](https://img.shields.io/badge/Protocol-TLS_1.3-10b981.svg)](#)
 [![Go Web Server](https://img.shields.io/badge/Backend-Go_1.21+-00add8.svg)](#)
+[![Docker](https://img.shields.io/badge/Container-Chainguard_Hardened-2496ED.svg)](#)
+[![Multi-Arch](https://img.shields.io/badge/Architecture-amd64_%7C_arm64-ff69b4.svg)](#)
 
 This project provides a fully self-contained, automated demonstration of **Merkle Tree Certificates (MTC)**—an experimental Internet Engineering Task Force (IETF) architectural proposal designed to fix the severe performance bottlenecks caused by massive Post-Quantum Cryptography (PQC) signature sizes in standard TLS handshakes.
 
-![Main UI showing Connection Security](./screenshots/main_ui.png)
+![Main UI showing Connection Security](./demo/screenshots/main_ui.png)
 
 ## What are Merkle Tree Certificates?
 
@@ -26,8 +28,23 @@ The result? The internet gets quantum-level security without sacrificing the spe
 * **TLS 1.3 Web Server:** A Go-based backend that enforces TLS 1.3 and statically exposes the generated MTC artifacts in a `/.well-known/mtc/` style structure.
 * **Live In-Browser Verification:** Real-time backend verification of the certificate's inclusion proof, mimicking an interoperable TLS client.
 * **Payload Decoder & Diagnostics:** Explore the internals of the experimental binary structures (CA Params, Validity Window, Certificate payload) right from the browser.
+* **Secure Containerization:** Containerized using an ultra-hardened, zero-CVE Chainguard distroless base image for the absolute minimum attack surface.
+* **Multi-Arch CI Pipeline:** Fully automated GitHub Actions workflow to build the secure container concurrently across `linux/amd64` and `linux/arm64` via QEMU and Buildx.
 
-![Payload Diagnostics & Decoded Views](./screenshots/diagnostics.png)
+![Payload Diagnostics & Decoded Views](./demo/screenshots/diagnostics.png)
+
+## Running with Docker (Recommended)
+
+You can build and run this entire demonstration securely inside a hardened Chainguard container without manually compiling the Go binaries on your host machine.
+
+```bash
+# Build the multi-arch image locally
+docker build -t mtc-demo:latest .
+
+# Run the container mapping the secure port
+docker run -p 8443:8443 mtc-demo:latest
+```
+Then simply open `https://localhost:8443` in your browser.
 
 ## Quick Start
 
@@ -66,15 +83,14 @@ Once loaded, click **"Verify Merkle Tree Certificate"** to perform a live inclus
 ## Project Structure
 
 ```text
-demo/
-├── setup.sh             # Automates CA creation and certificate issuance
-├── main.go              # The Go TLS 1.3 Web Server and verification API
-├── website.mtc          # The raw binary Merkle Tree Certificate
-├── website.vw           # The signed Validity Window
-├── ca/                  # The generated local CA environment
-├── static/
-│   └── index.html       # The premium frontend UI
-└── screenshots/         # Screenshots for documentation
+/
+├── Dockerfile           # Secure multi-stage Chainguard container
+├── .github/workflows/   # Multi-arch CI pipeline via QEMU/Buildx
+└── demo/
+    ├── setup.sh             # Automates CA creation and certificate issuance
+    ├── main.go              # The Go TLS 1.3 Web Server and verification API
+    ├── static/              # The premium frontend UI
+    └── screenshots/         # Screenshots for documentation
 ```
 
 ## Behind the Scenes (How Verification Works)
