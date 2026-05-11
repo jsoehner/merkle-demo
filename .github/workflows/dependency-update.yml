@@ -41,7 +41,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: mtc/go.mod   # pin to the version declared in the module
+          # Absolute path ensures setup-go finds the file regardless of runner CWD
+          go-version-file: ${{ github.workspace }}/mtc/go.mod
 
       # ── 3. Update dependencies ────────────────────────────────────────────
       - name: Update Go modules (mtc)
