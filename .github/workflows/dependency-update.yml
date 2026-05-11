@@ -1,0 +1,125 @@
+name: Nightly Dependency Update
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Runs every night at 02:00 UTC.
+# Checks whether any Go module dependencies have newer versions available.
+# If updates are found:
+#   1. Commits them back to main
+#   2. Creates a new semver git tag → triggers docker-publish.yml
+# ──────────────────────────────────────────────────────────────────────────────
+on:
+  schedule:
+    - cron: "0 2 * * *"   # 02:00 UTC every day
+  workflow_dispatch:        # allow manual trigger from Actions UI
+
+concurrency:
+  group: dependency-update
+  cancel-in-progress: true
+
+jobs:
+  update-deps:
+    name: Update Go Dependencies
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # needed to push commits & tags
+
+    outputs:
+      updated: ${{ steps.check.outputs.updated }}
+      new_tag:  ${{ steps.tag.outputs.new_tag }}
+
+    steps:
+      # ── 1. Source ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Full history so we can compute the next semver tag
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 2. Go toolchain ───────────────────────────────────────────────────
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: mtc/go.mod   # pin to the version declared in the module
+
+      # ── 3. Update dependencies ────────────────────────────────────────────
+      - name: Update Go modules (mtc)
+        working-directory: mtc
+        run: |
+          go get -u ./...
+          go mod tidy
+
+      - name: Update Go modules (demo)
+        working-directory: demo
+        run: |
+          go get -u ./...
+          go mod tidy
+
+      # ── 4. Detect changes ─────────────────────────────────────────────────
+      - name: Detect dependency changes
+        id: check
+        run: |
+          if git diff --quiet; then
+            echo "updated=false" >> $GITHUB_OUTPUT
+            echo "✅ No dependency updates found." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "updated=true" >> $GITHUB_OUTPUT
+            echo "### 📦 Dependency Updates Found" >> $GITHUB_STEP_SUMMARY
+            git diff --stat >> $GITHUB_STEP_SUMMARY
+          fi
+
+      # ── 5. Compute next semver tag ────────────────────────────────────────
+      #   Finds the latest vX.Y.Z tag and bumps the patch number.
+      #   Falls back to v0.1.0 if no tags exist.
+      - name: Compute next patch version
+        if: steps.check.outputs.updated == 'true'
+        id: tag
+        run: |
+          LATEST=$(git tag --list 'v*.*.*' --sort=-version:refname | head -n1)
+          if [ -z "$LATEST" ]; then
+            NEW_TAG="v0.1.0"
+          else
+            # strip leading 'v' and split on '.'
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${LATEST#v}"
+            PATCH=$((PATCH + 1))
+            NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          echo "new_tag=${NEW_TAG}" >> $GITHUB_OUTPUT
+          echo "**Next tag:** \`${NEW_TAG}\`" >> $GITHUB_STEP_SUMMARY
+
+      # ── 6. Commit updated go.sum / go.mod ─────────────────────────────────
+      - name: Commit dependency updates
+        if: steps.check.outputs.updated == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(deps): nightly dependency update [skip ci]
+
+          Automatically updated Go module dependencies.
+          A new Docker image will be published under ${{ steps.tag.outputs.new_tag }}."
+
+      # ── 7. Create & push semver tag ───────────────────────────────────────
+      #   Pushing a 'v*.*.*' tag fires the docker-publish workflow.
+      - name: Tag release
+        if: steps.check.outputs.updated == 'true'
+        run: |
+          NEW_TAG="${{ steps.tag.outputs.new_tag }}"
+          git tag -a "${NEW_TAG}" \
+            -m "Automated release ${NEW_TAG} — nightly dependency update"
+          git push origin main "${NEW_TAG}"
+
+      # ── 8. Summary ────────────────────────────────────────────────────────
+      - name: Final summary
+        if: steps.check.outputs.updated == 'true'
+        run: |
+          echo "### 🚀 Release Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "Tag **${{ steps.tag.outputs.new_tag }}** pushed." >> $GITHUB_STEP_SUMMARY
+          echo "The **docker-publish** workflow will now build & push the image." >> $GITHUB_STEP_SUMMARY
+
+      - name: No-op summary
+        if: steps.check.outputs.updated == 'false'
+        run: |
+          echo "### 💤 No Release Needed" >> $GITHUB_STEP_SUMMARY
+          echo "All dependencies are up to date. Skipping release." >> $GITHUB_STEP_SUMMARY
