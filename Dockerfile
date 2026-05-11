@@ -19,41 +19,45 @@ COPY . .
 RUN cd mtc && \
     CGO_ENABLED=0 go build -o ../mtc-cli ./cmd/mtc
 
-# Run the setup script to generate the CA, Keys, and MTC artifacts
-# We run this during the build so the artifacts are baked into the container
-RUN cd demo && \
-    chmod +x setup.sh && \
-    ./setup.sh
+# NOTE: setup.sh is NOT run at build time.
+# Artifacts (CA, keys, MTC certs) are generated fresh at container startup
+# via entrypoint.sh so they never expire due to a stale image.
 
 # Build the Web Server statically
 RUN cd demo && \
     CGO_ENABLED=0 go build -o website-server main.go
 
 # ==========================================
-# Runtime Stage (Distroless)
+# Runtime Stage
 # ==========================================
-FROM cgr.dev/chainguard/static:latest
+# wolfi-base is used (instead of distroless) because setup.sh needs
+# bash and openssl at runtime to generate fresh PKI artifacts on startup.
+FROM cgr.dev/chainguard/wolfi-base
 
-# The Go backend expects to be run from the demo/ directory 
-# because it references files like "static" and "website.mtc"
+RUN apk add --no-cache bash openssl
+
+# The Go backend expects to be run from the demo/ directory
+# because it references relative paths like "static", "website.mtc", etc.
 WORKDIR /app/demo
 
-# Copy the CLI tool to the parent directory as expected by main.go (exec.Command("../mtc-cli"))
+# Copy the CLI tool — main.go calls it via exec.Command("../mtc-cli")
 COPY --from=builder /app/mtc-cli /app/mtc-cli
 
 # Copy the server binary
 COPY --from=builder /app/demo/website-server /app/demo/website-server
 
-# Copy all the generated PKI and website files
-COPY --from=builder /app/demo/ca /app/demo/ca
-COPY --from=builder /app/demo/website.mtc /app/demo/website.mtc
-COPY --from=builder /app/demo/website.vw /app/demo/website.vw
-COPY --from=builder /app/demo/website.pem /app/demo/website.pem
-COPY --from=builder /app/demo/website.key /app/demo/website.key
+# Copy the setup script (runs at startup to generate fresh MTC artifacts)
+COPY --from=builder /app/demo/setup.sh /app/demo/setup.sh
+
+# Copy the static UI assets (these are not time-sensitive)
 COPY --from=builder /app/demo/static /app/demo/static
+
+# Copy the entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh /app/demo/setup.sh
 
 # Expose the HTTPS port
 EXPOSE 8443
 
-# Start the server
-ENTRYPOINT ["/app/demo/website-server"]
+# On startup: generate fresh CA + MTC artifacts, then launch the server
+ENTRYPOINT ["/app/entrypoint.sh"]
