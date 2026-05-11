@@ -1,6 +1,3 @@
-# Binaries
-mtc-cli
-demo/website-server
 
 # Generated MTC and TLS files
 demo/ca/

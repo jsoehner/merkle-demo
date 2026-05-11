@@ -24,12 +24,12 @@ $MTC_CLI ca -p ca queue -i website-asr
 
 echo "[4/4] Issuing batches..."
 # We wait a bit to ensure the batch duration has passed
-sleep 3
+sleep 5
 $MTC_CLI ca -p ca issue
 echo "First batch issued."
 
 # Wait again and issue a second batch so we have a valid validity-window with a previous tree head
-sleep 3
+sleep 5
 $MTC_CLI ca -p ca queue --tls-pem website.pub --dns other.localhost
 $MTC_CLI ca -p ca issue
 echo "Second batch issued."
