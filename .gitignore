@@ -1,0 +1,19 @@
+# Binaries
+mtc-cli
+demo/website-server
+
+# Generated MTC and TLS files
+demo/ca/
+demo/website.mtc
+demo/website.vw
+demo/website.pem
+demo/website.key
+demo/website.pub
+demo/website-asr
+demo/dummy-asr
+
+# The cloned repo
+mtc/
+
+# Mac OS
+.DS_Store
