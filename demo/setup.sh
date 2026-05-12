@@ -101,7 +101,9 @@ echo "=== DIAGNOSTICS: Landmark CA Parameters ==="
 $MTC_CLI inspect ca-params landmark-ca/www/mtc/v04b/ca-params
 echo ""
 echo "=== DIAGNOSTICS: Validity Window ==="
-$MTC_CLI inspect -ca-params ca/www/mtc/v04b/ca-params validity-window website.vw
+# Show only the header/summary — suppress 302k+ tree_heads lines that flood stdout
+$MTC_CLI inspect -ca-params ca/www/mtc/v04b/ca-params validity-window website.vw 2>&1 | head -15
+echo "  … (302,400 tree_heads entries suppressed for startup speed)"
 echo ""
 echo "=== DIAGNOSTICS: Website MTC Certificate ==="
 $MTC_CLI inspect -ca-params ca/www/mtc/v04b/ca-params cert website.mtc

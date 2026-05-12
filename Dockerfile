@@ -75,4 +75,8 @@ RUN chmod +x /app/entrypoint.sh /app/demo/setup.sh \
 # Expose MTC Demo (HTTPS) + Playground (HTTP)
 EXPOSE 8443 8444
 
+# Health check — playground starts last, so if it's up both servers are ready
+HEALTHCHECK --interval=5s --timeout=3s --start-period=45s --retries=3 \
+  CMD bash -c 'echo > /dev/tcp/localhost/8444' || exit 1
+
 ENTRYPOINT ["/app/entrypoint.sh"]

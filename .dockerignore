@@ -1,0 +1,38 @@
+# Cloned repos (fetched via git clone inside Dockerfile)
+mtc/
+ca-extension-mtc-playground/
+
+# Generated MTC and TLS artifacts
+demo/ca/
+demo/landmark-ca/
+demo/website.mtc
+demo/website.vw
+demo/website.pem
+demo/website.key
+demo/website.pub
+demo/website-asr
+demo/dummy-asr
+demo/landmark*
+demo/website-server
+
+# Playground build output
+playground/playground-server
+
+# VCS
+.git/
+.github/
+.gitignore
+
+# OS
+.DS_Store
+
+# Docker
+Dockerfile
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+
+# Screenshots (not needed at runtime)
+demo/screenshots/
