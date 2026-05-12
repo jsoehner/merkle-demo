@@ -4,389 +4,424 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post-Quantum TLS Ready - Merkle Tree Certificates</title>
+    <meta name="description" content="Live demo of Merkle Tree Certificate (MTC) inclusion proofs with landmark intermediary CA visualization.">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0a0f18;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #07090f;
+            --card: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.08);
             --primary: #4f46e5;
-            --primary-glow: rgba(79, 70, 229, 0.5);
+            --primary-glow: rgba(79,70,229,0.45);
             --success: #10b981;
+            --danger: #ef4444;
             --accent: #8b5cf6;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
+            --gold: #f59e0b;
+            --teal: #14b8a6;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
         }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;
+            background-image:radial-gradient(circle at 15% 50%,rgba(79,70,229,.12),transparent 30%),radial-gradient(circle at 85% 20%,rgba(139,92,246,.12),transparent 30%),radial-gradient(circle at 50% 90%,rgba(20,184,166,.08),transparent 30%);}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        /* --- HEADER --- */
+        header{text-align:center;padding:3.5rem 2rem 1.5rem;position:relative;z-index:10}
+        .badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(16,185,129,.1);color:var(--success);border:1px solid rgba(16,185,129,.25);padding:.3rem .9rem;border-radius:999px;font-size:.85rem;margin-bottom:1rem}
+        .badge::before{content:'';width:8px;height:8px;background:var(--success);border-radius:50%;box-shadow:0 0 8px var(--success);animation:pulse-dot 2s ease infinite}
+        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+        h1{font-size:3rem;font-weight:700;background:linear-gradient(135deg,#a78bfa,#818cf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.75rem}
+        .subtitle{font-size:1.1rem;color:var(--muted);max-width:640px;margin:0 auto;line-height:1.65}
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-x: hidden;
-            position: relative;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(79, 70, 229, 0.15), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
-        }
+        /* --- LAYOUT --- */
+        .wrap{width:100%;max-width:1200px;padding:1.5rem 2rem}
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+        .full{grid-column:1/-1}
 
-        header {
-            text-align: center;
-            padding: 4rem 2rem 2rem;
-            position: relative;
-            z-index: 10;
-        }
+        /* --- CARDS --- */
+        .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.75rem;backdrop-filter:blur(16px);position:relative;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
+        .card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.14);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+        .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--primary),transparent);opacity:0;transition:opacity .3s}
+        .card:hover::before{opacity:1}
+        .card-accent-gold::before{background:linear-gradient(90deg,transparent,var(--gold),transparent)!important;opacity:1}
+        .card-accent-teal::before{background:linear-gradient(90deg,transparent,var(--teal),transparent)!important;opacity:1}
 
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            background: linear-gradient(to right, #a78bfa, #818cf8, #34d399);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: pulse-gradient 8s ease infinite alternate;
-        }
+        h2{font-size:1.3rem;font-weight:500;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+        h3{font-size:1rem;font-weight:500;margin-bottom:.75rem;color:var(--muted)}
 
-        p.subtitle {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
+        /* --- DATA ROWS --- */
+        .row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border)}
+        .row:last-child{border-bottom:none}
+        .label{color:var(--muted);font-size:.9rem}
+        .val{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:#d1d5db}
+        .val-green{color:var(--success)}
+        .val-gold{color:var(--gold)}
+        .val-accent{color:var(--accent)}
 
-        .container {
-            width: 100%;
-            max-width: 1100px;
-            padding: 2rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            z-index: 10;
-        }
+        /* --- BUTTONS --- */
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.25rem;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px var(--primary-glow)}
+        .btn:hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 6px 20px var(--primary-glow)}
+        .btn:active{transform:translateY(0)}
+        .btn-ghost{background:transparent;border:1px solid var(--border);box-shadow:none;color:var(--muted)}
+        .btn-ghost:hover{border-color:rgba(255,255,255,.2);color:var(--text);box-shadow:none}
+        .btn-gold{background:linear-gradient(135deg,#d97706,#f59e0b)}
+        .btn-teal{background:linear-gradient(135deg,#0d9488,#14b8a6)}
+        .btn-sm{padding:.45rem .9rem;font-size:.85rem}
+        .btn-block{width:100%;display:flex}
+        .btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
 
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 2rem;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
+        /* --- SPINNER --- */
+        .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite;display:none}
+        @keyframes spin{to{transform:rotate(360deg)}}
 
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
+        /* --- TERMINAL --- */
+        .terminal{background:#0b0f1a;border:1px solid var(--border);border-radius:10px;padding:1.25rem;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#a3be8c;overflow-x:auto;white-space:pre-wrap;margin-top:1rem;min-height:100px;display:none;animation:fadeUp .35s ease forwards}
+        .terminal.show{display:block}
+        .terminal-always{display:block;min-height:120px;opacity:.75}
+        .terminal-err{color:#bf616a}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
+        /* --- SIZE BADGES --- */
+        .size-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-top:1rem}
+        .size-chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:.85rem;text-align:center;transition:border-color .2s}
+        .size-chip:hover{border-color:rgba(255,255,255,.15)}
+        .size-chip .chip-name{font-size:.75rem;color:var(--muted);margin-bottom:.3rem}
+        .size-chip .chip-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;color:var(--text)}
+        .size-chip .chip-mb{font-size:.7rem;color:var(--accent);margin-top:.15rem}
 
-        .card:hover::before {
-            opacity: 1;
-        }
+        /* --- PROOF CHAIN VISUALIZER --- */
+        .proof-chain{display:flex;align-items:stretch;gap:0;margin-top:1.25rem;overflow-x:auto;padding-bottom:.5rem}
+        .proof-node{flex:1;min-width:160px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:1.1rem;text-align:center;position:relative;transition:all .25s}
+        .proof-node.active{border-color:var(--primary);box-shadow:0 0 20px rgba(79,70,229,.25)}
+        .proof-node.verified{border-color:var(--success);box-shadow:0 0 18px rgba(16,185,129,.2)}
+        .proof-node.landmark{border-color:var(--gold);box-shadow:0 0 18px rgba(245,158,11,.2)}
+        .node-icon{font-size:2rem;margin-bottom:.5rem;display:block}
+        .node-label{font-size:.8rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem}
+        .node-name{font-size:.95rem;font-weight:600;margin-bottom:.5rem}
+        .node-meta{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);word-break:break-all;line-height:1.5}
+        .node-size{font-size:.75rem;color:var(--accent);margin-top:.4rem}
+        .proof-arrow{display:flex;align-items:center;justify-content:center;padding:0 .5rem;color:var(--muted);font-size:1.2rem;flex-shrink:0}
 
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 500;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+        /* --- PROOF STEPS --- */
+        .step-list{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem}
+        .step{display:flex;gap:.85rem;padding:.85rem 1rem;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02);cursor:pointer;transition:border-color .2s}
+        .step:hover{border-color:rgba(255,255,255,.15)}
+        .step.pass{border-left:3px solid var(--success)}
+        .step.fail{border-left:3px solid var(--danger)}
+        .step-num{width:26px;height:26px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;flex-shrink:0}
+        .step-body{flex:1;min-width:0}
+        .step-actor{font-size:.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+        .step-action{font-size:.9rem;font-weight:500;margin:.15rem 0}
+        .step-detail{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);white-space:pre-wrap;max-height:0;overflow:hidden;transition:max-height .3s ease}
+        .step.open .step-detail{max-height:400px}
+        .step-icon{font-size:1.1rem;flex-shrink:0;align-self:center}
 
-        .status-badge {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+        /* --- DIAG TABS --- */
+        .tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+        .tab{padding:.4rem .85rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.85rem;cursor:pointer;transition:all .2s}
+        .tab:hover,.tab.active{background:rgba(79,70,229,.15);border-color:rgba(79,70,229,.4);color:var(--text)}
+        .tab.gold:hover,.tab.gold.active{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.4);color:var(--gold)}
 
-        .status-badge::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--success);
-        }
-
-        .data-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .data-row:last-child {
-            border-bottom: none;
-        }
-
-        .data-label {
-            color: var(--text-muted);
-        }
-
-        .data-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            color: #d1d5db;
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            margin-top: 1.5rem;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px var(--primary-glow);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px var(--primary-glow);
-            filter: brightness(1.1);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .terminal {
-            background: #0f141e;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #a3be8c;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            margin-top: 1rem;
-            min-height: 120px;
-            display: none;
-        }
-
-        .terminal.show {
-            display: block;
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        .spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes pulse-gradient {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
-        }
-
-        .glow-orb {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 1;
-            filter: blur(40px);
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0.3;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-            h1 { font-size: 2.5rem; }
-        }
+        @media(max-width:768px){.grid-2{grid-template-columns:1fr}h1{font-size:2.2rem}.proof-chain{flex-direction:column}}
     </style>
 </head>
 <body>
-    <div class="glow-orb"></div>
-    <header>
-        <div class="status-badge" style="margin-bottom: 1rem;">TLS 1.3 Active</div>
-        <h1>Next-Gen WebPKI</h1>
-        <p class="subtitle">This server is secured by an experimental Post-Quantum ready Merkle Tree Certificate (MTC), significantly reducing handshake sizes by using inclusion proofs instead of massive certificate chains.</p>
-    </header>
+<header>
+    <div class="badge">TLS 1.3 Active</div>
+    <h1>Next-Gen WebPKI</h1>
+    <p class="subtitle">Secured by an experimental Post-Quantum ready <strong>Merkle Tree Certificate</strong> — inclusion proofs instead of massive certificate chains, with a <strong>Landmark</strong> intermediary CA.</p>
+</header>
 
-    <div class="container">
-        <!-- Details Card -->
+<!-- Row 1: Connection Info + Verify -->
+<div class="wrap">
+    <div class="grid-2">
+
+        <!-- Connection Security -->
         <div class="card">
-            <h2>Connection Security</h2>
-            <div class="data-row">
-                <span class="data-label">Protocol</span>
-                <span class="data-value" style="color: var(--success);">TLS 1.3</span>
+            <h2>🔒 Connection Security</h2>
+            <div class="row"><span class="label">Protocol</span><span class="val val-green">TLS 1.3</span></div>
+            <div class="row"><span class="label">Certificate Type</span><span class="val">Merkle Tree Cert (MTC)</span></div>
+            <div class="row"><span class="label">Identity</span><span class="val">localhost, 127.0.0.1</span></div>
+            <div class="row"><span class="label">Public Key</span><span class="val">prime256v1 (ECDSA P-256)</span></div>
+            <div class="row"><span class="label">Lifetime / Window</span><span class="val val-gold">7 days · ~9.2 MB</span></div>
+            <div class="row">
+                <span class="label">Artifacts</span>
+                <span class="val">
+                    <a href="/api/files/cert" style="color:var(--accent);text-decoration:none">.mtc</a> ·
+                    <a href="/api/files/vw" style="color:var(--accent);text-decoration:none">.vw</a> ·
+                    <a href="/api/files/params" style="color:var(--accent);text-decoration:none">ca-params</a>
+                </span>
             </div>
-            <div class="data-row">
-                <span class="data-label">Certificate Type</span>
-                <span class="data-value">Merkle Tree Certificate (MTC)</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">Identity (Subject)</span>
-                <span class="data-value">localhost, 127.0.0.1</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">Public Key Algorithm</span>
-                <span class="data-value">prime256v1 (ECDSA)</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">MTC Artifacts</span>
-                <span class="data-value"><a href="/api/files/cert" style="color: var(--accent); text-decoration:none;">.mtc</a> | <a href="/api/files/vw" style="color: var(--accent); text-decoration:none;">.vw</a></span>
-            </div>
-            
-            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
-                <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main);">Diagnostics</h3>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; flex: 1; margin-top: 0; min-width: 120px;" onclick="inspectMTC('cert')">Inspect Cert</button>
-                    <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; flex: 1; margin-top: 0; min-width: 120px;" onclick="inspectMTC('vw')">Inspect VW</button>
-                    <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; flex: 1; margin-top: 0; min-width: 120px;" onclick="inspectMTC('ca-params')">Inspect CA</button>
-                </div>
+
+            <!-- Artifact Sizes -->
+            <h3 style="margin-top:1.25rem">Artifact Sizes</h3>
+            <div class="size-grid" id="sizeGrid">
+                <div class="size-chip"><div class="chip-name">Loading…</div></div>
             </div>
         </div>
 
-        <!-- Verification Card -->
+        <!-- Live Verify -->
         <div class="card">
-            <h2>Live Verification</h2>
-            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;">
-                Verify the Merkle inclusion proof for this website. This validates that our server's key is part of the CA's globally signed batch root.
+            <h2>⚡ Live Verification</h2>
+            <p style="color:var(--muted);font-size:.95rem;line-height:1.6;margin-bottom:1.25rem">
+                Verify the Merkle inclusion proof for this server's certificate against the Root CA's signed validity window.
             </p>
-            
-            <button class="btn" id="verifyBtn" onclick="verifyMTC()">
-                <span>Verify Merkle Tree Certificate</span>
-                <div class="spinner" id="btnSpinner"></div>
+
+            <button class="btn btn-block" id="verifyBtn" onclick="runVerify('root')">
+                <span id="verifyTxt">Verify via Root CA</span>
+                <div class="spinner" id="verifySpin"></div>
             </button>
 
-            <div class="terminal" id="terminalOutput"></div>
+            <button class="btn btn-gold btn-block" style="margin-top:.75rem" id="verifyLmBtn" onclick="runVerify('landmark')">
+                <span id="verifyLmTxt">Verify via Landmark CA</span>
+                <div class="spinner" id="verifyLmSpin"></div>
+            </button>
+
+            <div class="terminal" id="verifyOutput"></div>
         </div>
     </div>
-    
-    <div class="container" style="padding-top: 0;">
-        <div class="card" style="width: 100%; grid-column: 1 / -1;">
-            <h2>Payload Decoder (Diagnostics)</h2>
-            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.5;">
-                Click the diagnostic buttons above to decode and inspect the binary MTC artifacts in human-readable format.
-            </p>
-            <div class="terminal" id="diagnosticOutput" style="min-height: 200px; display: block; border-left: 4px solid var(--accent); opacity: 0.7;">
-Waiting for input... Select a payload to inspect.
+</div>
+
+<!-- Row 2: Proof Chain Visualizer -->
+<div class="wrap" style="padding-top:0">
+    <div class="card card-accent-gold full">
+        <h2>🌳 Merkle Proof Chain</h2>
+        <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">
+            Visual walkthrough of the trust chain: <strong>Root CA → Landmark CA → Leaf Certificate</strong>. Click <em>Run Proof Chain</em> to fetch and expand each step.
+        </p>
+
+        <!-- Chain diagram (placeholder until loaded) -->
+        <div class="proof-chain" id="proofChain">
+            <div class="proof-node" id="nodeRoot">
+                <span class="node-icon">🏛️</span>
+                <div class="node-label">Root CA</div>
+                <div class="node-name">62253.12.15</div>
+                <div class="node-meta">—</div>
+            </div>
+            <div class="proof-arrow">→</div>
+            <div class="proof-node landmark" id="nodeLandmark">
+                <span class="node-icon">📍</span>
+                <div class="node-label">Landmark CA</div>
+                <div class="node-name">62253.12.15.1</div>
+                <div class="node-meta">—</div>
+            </div>
+            <div class="proof-arrow">→</div>
+            <div class="proof-node" id="nodeLeaf">
+                <span class="node-icon">📄</span>
+                <div class="node-label">Leaf Certificate</div>
+                <div class="node-name">localhost</div>
+                <div class="node-meta">—</div>
             </div>
         </div>
+
+        <div class="btn-row">
+            <button class="btn" onclick="runProofChain()">
+                <span id="chainTxt">Run Proof Chain</span>
+                <div class="spinner" id="chainSpin"></div>
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="collapseAllSteps()">Collapse All</button>
+        </div>
+
+        <div class="step-list" id="stepList"></div>
     </div>
+</div>
 
-    <script>
-        async function verifyMTC() {
-            const btn = document.getElementById('verifyBtn');
-            const spinner = document.getElementById('btnSpinner');
-            const btnText = btn.querySelector('span');
-            const terminal = document.getElementById('terminalOutput');
-            
-            btnText.style.display = 'none';
-            spinner.style.display = 'block';
-            terminal.classList.remove('show');
-            
-            try {
-                const response = await fetch('/api/verify');
-                const data = await response.json();
-                
-                setTimeout(() => {
-                    spinner.style.display = 'none';
-                    btnText.style.display = 'block';
-                    
-                    if (data.success) {
-                        terminal.style.color = '#a3be8c'; // Green-ish
-                        terminal.innerText = "✅ [SUCCESS] Certificate inclusion verified!\n\n" + (data.output || "No stdout produced. Exit code 0.");
-                    } else {
-                        terminal.style.color = '#bf616a'; // Red-ish
-                        terminal.innerText = "❌ [FAILED] Verification error!\n\n" + data.output;
-                    }
-                    terminal.classList.add('show');
-                }, 800); // Artificial delay for effect
-                
-            } catch (err) {
-                spinner.style.display = 'none';
-                btnText.style.display = 'block';
-                terminal.style.color = '#bf616a';
-                terminal.innerText = "❌ [ERROR] Network failure connecting to verification backend.";
-                terminal.classList.add('show');
+<!-- Row 3: Diagnostics -->
+<div class="wrap" style="padding-top:0">
+    <div class="card card-accent-teal full">
+        <h2>🔬 Payload Decoder</h2>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="selectTab(this,'cert')">Leaf Cert</button>
+            <button class="tab" onclick="selectTab(this,'vw')">Root VW</button>
+            <button class="tab" onclick="selectTab(this,'ca-params')">Root CA Params</button>
+            <button class="tab gold" onclick="selectTab(this,'landmark-cert')">Landmark Cert</button>
+            <button class="tab gold" onclick="selectTab(this,'landmark-vw')">Landmark VW</button>
+            <button class="tab gold" onclick="selectTab(this,'landmark-params')">Landmark Params</button>
+        </div>
+
+        <div class="terminal terminal-always" id="diagOutput" style="border-left:3px solid var(--teal)">Waiting for input… Select a tab above to decode a payload.</div>
+    </div>
+</div>
+
+<div style="height:3rem"></div>
+
+<script>
+// ---- File Sizes ----
+async function loadSizes() {
+    try {
+        const r = await fetch('/api/file-sizes');
+        const d = await r.json();
+        const grid = document.getElementById('sizeGrid');
+        const labels = {
+            cert: 'website.mtc',
+            vw: 'Root .vw',
+            'landmark-vw': 'Landmark .vw',
+            'landmark-cert': 'Landmark .mtc',
+            'ca-params': 'CA Params'
+        };
+        grid.innerHTML = '';
+        for (const [k, lbl] of Object.entries(labels)) {
+            const item = d[k] || { bytes: 0, mb: 'N/A' };
+            const colorClass = k.includes('vw') ? 'color:var(--gold)' : 'color:var(--accent)';
+            grid.innerHTML += `
+                <div class="size-chip">
+                    <div class="chip-name">${lbl}</div>
+                    <div class="chip-val" style="${colorClass}">${fmtBytes(item.bytes)}</div>
+                    <div class="chip-mb">${item.mb}</div>
+                </div>`;
+        }
+    } catch(e) {
+        document.getElementById('sizeGrid').innerHTML = '<div style="color:var(--danger);font-size:.85rem">Failed to load sizes</div>';
+    }
+}
+function fmtBytes(b) {
+    if (!b) return '0 B';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(2) + ' MB';
+}
+
+// ---- Verify ----
+async function runVerify(ca) {
+    const isLm = ca === 'landmark';
+    const btnId = isLm ? 'verifyLmBtn' : 'verifyBtn';
+    const txtId = isLm ? 'verifyLmTxt' : 'verifyTxt';
+    const spinId = isLm ? 'verifyLmSpin' : 'verifySpin';
+    const out = document.getElementById('verifyOutput');
+
+    document.getElementById(txtId).style.display = 'none';
+    document.getElementById(spinId).style.display = 'block';
+    out.classList.remove('show');
+
+    try {
+        const url = isLm ? '/api/verify/landmark' : '/api/verify';
+        const r = await fetch(url);
+        const d = await r.json();
+
+        setTimeout(() => {
+            document.getElementById(spinId).style.display = 'none';
+            document.getElementById(txtId).style.display = 'inline';
+            out.className = 'terminal show';
+            if (d.success) {
+                out.style.color = '#a3be8c';
+                out.textContent = (isLm ? '📍 [LANDMARK] ' : '🏛️ [ROOT CA] ') + '✅ Inclusion proof VERIFIED!\n\n' + (d.output || 'Exit code 0 — no stdout.');
+            } else {
+                out.style.color = '#bf616a';
+                out.textContent = (isLm ? '📍 [LANDMARK] ' : '🏛️ [ROOT CA] ') + '❌ Verification FAILED!\n\n' + d.output;
             }
+        }, 700);
+    } catch(e) {
+        document.getElementById(spinId).style.display = 'none';
+        document.getElementById(txtId).style.display = 'inline';
+        out.className = 'terminal show terminal-err';
+        out.textContent = '❌ Network failure — could not reach backend.';
+    }
+}
+
+// ---- Proof Chain ----
+async function runProofChain() {
+    document.getElementById('chainTxt').style.display = 'none';
+    document.getElementById('chainSpin').style.display = 'block';
+    document.getElementById('stepList').innerHTML = '';
+
+    try {
+        const r = await fetch('/api/proof-chain');
+        const d = await r.json();
+
+        document.getElementById('chainSpin').style.display = 'none';
+        document.getElementById('chainTxt').style.display = 'inline';
+
+        // Update chain nodes
+        updateNode('nodeRoot', d.root_ca, '🏛️', 'Root CA', false);
+        updateNode('nodeLandmark', d.landmark, '📍', 'Landmark CA', true);
+        updateNode('nodeLeaf', d.leaf_cert, '📄', 'Leaf Cert', false);
+
+        if (d.chain_valid) {
+            document.getElementById('nodeRoot').classList.add('verified');
+            document.getElementById('nodeLeaf').classList.add('verified');
         }
 
-        async function inspectMTC(target) {
-            const terminal = document.getElementById('diagnosticOutput');
-            terminal.style.opacity = '1';
-            terminal.innerText = "Loading " + target + " payload...";
-            terminal.style.color = 'var(--text-muted)';
-            
-            try {
-                const response = await fetch(`/api/inspect?target=${target}`);
-                const data = await response.json();
-                
-                terminal.style.color = '#e5e9f0'; // Light terminal text
-                if (data.success) {
-                    terminal.innerText = `[Decoded Payload: ${target}]\n\n` + data.output;
-                } else {
-                    terminal.style.color = '#bf616a';
-                    terminal.innerText = `[Error decoding payload: ${target}]\n\n` + data.output;
-                }
-                
-                // Little animation
-                terminal.style.transform = 'scale(0.99)';
-                setTimeout(() => terminal.style.transform = 'scale(1)', 100);
-            } catch (err) {
-                terminal.style.color = '#bf616a';
-                terminal.innerText = "❌ [ERROR] Network failure connecting to inspection backend.";
-            }
-        }
-    </script>
+        // Render steps
+        const list = document.getElementById('stepList');
+        (d.steps || []).forEach(s => {
+            const div = document.createElement('div');
+            div.className = `step ${s.verified ? 'pass' : 'fail'}`;
+            div.innerHTML = `
+                <div class="step-num">${s.step}</div>
+                <div class="step-body">
+                    <div class="step-actor">${s.actor}</div>
+                    <div class="step-action">${s.action}</div>
+                    <div class="step-detail">${escHtml(s.result || '')}</div>
+                </div>
+                <div class="step-icon">${s.verified ? '✅' : '❌'}</div>`;
+            div.onclick = () => div.classList.toggle('open');
+            list.appendChild(div);
+        });
+    } catch(e) {
+        document.getElementById('chainSpin').style.display = 'none';
+        document.getElementById('chainTxt').style.display = 'inline';
+        document.getElementById('stepList').innerHTML = '<div style="color:var(--danger);padding:.75rem">❌ Failed to fetch proof chain from backend.</div>';
+    }
+}
+
+function updateNode(id, data, icon, role, isLandmark) {
+    if (!data) return;
+    const el = document.getElementById(id);
+    const batchTxt = data.batch_number ? `Batch #${data.batch_number}` : '';
+    const headTxt = data.tree_head ? `Root: ${data.tree_head}` : '';
+    const sizeTxt = data.size_bytes ? fmtBytes(data.size_bytes) : '';
+    el.innerHTML = `
+        <span class="node-icon">${icon}</span>
+        <div class="node-label">${role}</div>
+        <div class="node-name">${data.name || role}</div>
+        <div class="node-meta">${batchTxt}${batchTxt && headTxt ? '\n' : ''}${headTxt}</div>
+        ${sizeTxt ? `<div class="node-size">${sizeTxt}</div>` : ''}`;
+    if (isLandmark) el.classList.add('landmark');
+}
+
+function collapseAllSteps() {
+    document.querySelectorAll('.step.open').forEach(s => s.classList.remove('open'));
+}
+
+// ---- Diagnostics Tabs ----
+let activeTarget = 'cert';
+function selectTab(btn, target) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    activeTarget = target;
+    loadDiag(target);
+}
+
+async function loadDiag(target) {
+    const out = document.getElementById('diagOutput');
+    out.textContent = `Loading ${target}…`;
+    out.style.color = 'var(--muted)';
+    try {
+        const r = await fetch(`/api/inspect?target=${target}`);
+        const d = await r.json();
+        out.style.color = d.success ? '#e5e9f0' : '#bf616a';
+        out.textContent = d.success
+            ? `[Decoded: ${target}]\n\n${d.output}`
+            : `[Error decoding: ${target}]\n\n${d.output}`;
+        out.style.transform = 'scale(0.99)';
+        setTimeout(() => out.style.transform = 'scale(1)', 100);
+    } catch(e) {
+        out.style.color = '#bf616a';
+        out.textContent = '❌ Network error — backend unreachable.';
+    }
+}
+
+function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---- Init ----
+window.addEventListener('DOMContentLoaded', () => {
+    loadSizes();
+    loadDiag('cert');
+});
+</script>
 </body>
 </html>
