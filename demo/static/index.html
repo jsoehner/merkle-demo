@@ -9,10 +9,10 @@
     <style>
         :root {
             --bg: #07090f;
-            --card: rgba(255,255,255,0.03);
+            --panel: rgba(255,255,255,0.03);
             --border: rgba(255,255,255,0.08);
             --primary: #4f46e5;
-            --primary-glow: rgba(79,70,229,0.45);
+            --primary-glow: rgba(79,70,229,0.4);
             --success: #10b981;
             --danger: #ef4444;
             --accent: #8b5cf6;
@@ -20,262 +20,302 @@
             --teal: #14b8a6;
             --text: #f3f4f6;
             --muted: #9ca3af;
+            --header-h: 64px;
         }
         *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;
-            background-image:radial-gradient(circle at 15% 50%,rgba(79,70,229,.12),transparent 30%),radial-gradient(circle at 85% 20%,rgba(139,92,246,.12),transparent 30%),radial-gradient(circle at 50% 90%,rgba(20,184,166,.08),transparent 30%);}
+        html,body{height:100%;overflow:hidden;font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);
+            background-image:radial-gradient(circle at 15% 50%,rgba(79,70,229,.1),transparent 28%),
+                             radial-gradient(circle at 85% 15%,rgba(139,92,246,.1),transparent 28%),
+                             radial-gradient(circle at 50% 95%,rgba(20,184,166,.06),transparent 25%);}
 
-        /* --- HEADER --- */
-        header{text-align:center;padding:3.5rem 2rem 1.5rem;position:relative;z-index:10}
-        .badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(16,185,129,.1);color:var(--success);border:1px solid rgba(16,185,129,.25);padding:.3rem .9rem;border-radius:999px;font-size:.85rem;margin-bottom:1rem}
-        .badge::before{content:'';width:8px;height:8px;background:var(--success);border-radius:50%;box-shadow:0 0 8px var(--success);animation:pulse-dot 2s ease infinite}
-        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
-        h1{font-size:3rem;font-weight:700;background:linear-gradient(135deg,#a78bfa,#818cf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.75rem}
-        .subtitle{font-size:1.1rem;color:var(--muted);max-width:640px;margin:0 auto;line-height:1.65}
+        /* HEADER */
+        header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;
+               padding:0 1.5rem;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;z-index:10}
+        .brand{display:flex;align-items:center;gap:.75rem}
+        h1{font-size:1.35rem;font-weight:700;background:linear-gradient(135deg,#a78bfa,#818cf8,#34d399);
+           -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .subtitle{font-size:.8rem;color:var(--muted);max-width:500px;line-height:1.4}
+        .badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(16,185,129,.1);color:var(--success);
+               border:1px solid rgba(16,185,129,.25);padding:.25rem .75rem;border-radius:999px;font-size:.78rem;flex-shrink:0}
+        .badge::before{content:'';width:7px;height:7px;background:var(--success);border-radius:50%;
+                       box-shadow:0 0 7px var(--success);animation:pulse-dot 2s ease infinite}
+        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.35}}
 
-        /* --- LAYOUT --- */
-        .wrap{width:100%;max-width:1200px;padding:1.5rem 2rem}
-        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
-        .full{grid-column:1/-1}
+        /* MAIN LAYOUT */
+        .layout{display:flex;height:calc(100vh - var(--header-h));overflow:hidden}
 
-        /* --- CARDS --- */
-        .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.75rem;backdrop-filter:blur(16px);position:relative;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
-        .card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.14);box-shadow:0 12px 40px rgba(0,0,0,.25)}
-        .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--primary),transparent);opacity:0;transition:opacity .3s}
-        .card:hover::before{opacity:1}
-        .card-accent-gold::before{background:linear-gradient(90deg,transparent,var(--gold),transparent)!important;opacity:1}
-        .card-accent-teal::before{background:linear-gradient(90deg,transparent,var(--teal),transparent)!important;opacity:1}
+        /* LEFT PANEL */
+        .left-panel{width:33%;min-width:280px;flex-shrink:0;border-right:1px solid var(--border);
+                    display:flex;flex-direction:column;overflow:hidden}
+        .left-scroll{flex:1;overflow-y:auto;padding:1rem}
+        .left-scroll::-webkit-scrollbar{width:4px}
+        .left-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
 
-        h2{font-size:1.3rem;font-weight:500;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
-        h3{font-size:1rem;font-weight:500;margin-bottom:.75rem;color:var(--muted)}
+        /* RIGHT PANEL */
+        .right-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+        .tab-bar{display:flex;gap:.35rem;padding:.65rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+        .tab{padding:.35rem .85rem;border-radius:8px;border:1px solid var(--border);background:transparent;
+             color:var(--muted);font-family:'Outfit',sans-serif;font-size:.82rem;cursor:pointer;transition:all .18s}
+        .tab:hover,.tab.active{background:rgba(79,70,229,.15);border-color:rgba(79,70,229,.45);color:var(--text)}
+        .tab.gold:hover,.tab.gold.active{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.45);color:var(--gold)}
+        .tab-content{flex:1;overflow:hidden;display:none;flex-direction:column}
+        .tab-content.active{display:flex}
 
-        /* --- DATA ROWS --- */
-        .row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border)}
+        /* CARD */
+        .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.2rem;
+              backdrop-filter:blur(12px);position:relative;overflow:hidden;margin-bottom:.85rem}
+        .card:last-child{margin-bottom:0}
+        .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+                      background:linear-gradient(90deg,transparent,var(--primary),transparent);opacity:.6}
+        .card.gold-top::before{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+        .card.teal-top::before{background:linear-gradient(90deg,transparent,var(--teal),transparent)}
+        h2{font-size:1rem;font-weight:600;margin-bottom:.9rem;display:flex;align-items:center;gap:.4rem}
+        h3{font-size:.82rem;font-weight:500;color:var(--muted);margin-bottom:.6rem;margin-top:.85rem}
+
+        /* DATA ROWS */
+        .row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)}
         .row:last-child{border-bottom:none}
-        .label{color:var(--muted);font-size:.9rem}
-        .val{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:#d1d5db}
-        .val-green{color:var(--success)}
-        .val-gold{color:var(--gold)}
-        .val-accent{color:var(--accent)}
+        .label{color:var(--muted);font-size:.82rem}
+        .val{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#d1d5db}
+        .val-green{color:var(--success)} .val-gold{color:var(--gold)} .val-accent{color:var(--accent)}
 
-        /* --- BUTTONS --- */
-        .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.25rem;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px var(--primary-glow)}
-        .btn:hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 6px 20px var(--primary-glow)}
-        .btn:active{transform:translateY(0)}
-        .btn-ghost{background:transparent;border:1px solid var(--border);box-shadow:none;color:var(--muted)}
-        .btn-ghost:hover{border-color:rgba(255,255,255,.2);color:var(--text);box-shadow:none}
-        .btn-gold{background:linear-gradient(135deg,#d97706,#f59e0b)}
-        .btn-teal{background:linear-gradient(135deg,#0d9488,#14b8a6)}
-        .btn-sm{padding:.45rem .9rem;font-size:.85rem}
-        .btn-block{width:100%;display:flex}
-        .btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
+        /* SIZE GRID */
+        .size-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.65rem}
+        .size-chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;
+                   padding:.6rem;text-align:center}
+        .chip-name{font-size:.68rem;color:var(--muted);margin-bottom:.2rem}
+        .chip-val{font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:600}
+        .chip-mb{font-size:.64rem;color:var(--accent);margin-top:.1rem}
 
-        /* --- SPINNER --- */
-        .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite;display:none}
+        /* BUTTONS */
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem 1rem;
+             background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border:none;
+             border-radius:9px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;
+             transition:all .2s;box-shadow:0 3px 12px var(--primary-glow);width:100%}
+        .btn:hover{filter:brightness(1.12);box-shadow:0 5px 18px var(--primary-glow)}
+        .btn-gold{background:linear-gradient(135deg,#d97706,#f59e0b);box-shadow:0 3px 12px rgba(245,158,11,.3)}
+        .btn-gold:hover{box-shadow:0 5px 18px rgba(245,158,11,.4)}
+        .btn-ghost{background:transparent;border:1px solid var(--border);box-shadow:none;color:var(--muted);width:auto;padding:.35rem .8rem;font-size:.8rem}
+        .btn-ghost:hover{border-color:rgba(255,255,255,.2);color:var(--text)}
+        .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite;display:none}
         @keyframes spin{to{transform:rotate(360deg)}}
 
-        /* --- TERMINAL --- */
-        .terminal{background:#0b0f1a;border:1px solid var(--border);border-radius:10px;padding:1.25rem;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#a3be8c;overflow-x:auto;white-space:pre-wrap;margin-top:1rem;min-height:100px;display:none;animation:fadeUp .35s ease forwards}
-        .terminal.show{display:block}
-        .terminal-always{display:block;min-height:120px;opacity:.75}
+        /* TERMINAL */
+        .terminal{background:#0b0f1a;border:1px solid var(--border);border-radius:9px;padding:.9rem;
+                  font-family:'JetBrains Mono',monospace;font-size:.75rem;color:#a3be8c;
+                  white-space:pre-wrap;overflow-y:auto;flex:1;margin-top:.75rem;min-height:0}
         .terminal-err{color:#bf616a}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-        /* --- SIZE BADGES --- */
-        .size-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-top:1rem}
-        .size-chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:.85rem;text-align:center;transition:border-color .2s}
-        .size-chip:hover{border-color:rgba(255,255,255,.15)}
-        .size-chip .chip-name{font-size:.75rem;color:var(--muted);margin-bottom:.3rem}
-        .size-chip .chip-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;color:var(--text)}
-        .size-chip .chip-mb{font-size:.7rem;color:var(--accent);margin-top:.15rem}
+        /* VERIFY OUTPUT */
+        #verifyOutput{display:none;animation:fadeUp .3s ease forwards}
+        #verifyOutput.show{display:block;max-height:180px}
 
-        /* --- PROOF CHAIN VISUALIZER --- */
-        .proof-chain{display:flex;align-items:stretch;gap:0;margin-top:1.25rem;overflow-x:auto;padding-bottom:.5rem}
-        .proof-node{flex:1;min-width:160px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:1.1rem;text-align:center;position:relative;transition:all .25s}
-        .proof-node.active{border-color:var(--primary);box-shadow:0 0 20px rgba(79,70,229,.25)}
-        .proof-node.verified{border-color:var(--success);box-shadow:0 0 18px rgba(16,185,129,.2)}
-        .proof-node.landmark{border-color:var(--gold);box-shadow:0 0 18px rgba(245,158,11,.2)}
-        .node-icon{font-size:2rem;margin-bottom:.5rem;display:block}
-        .node-label{font-size:.8rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem}
-        .node-name{font-size:.95rem;font-weight:600;margin-bottom:.5rem}
-        .node-meta{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);word-break:break-all;line-height:1.5}
-        .node-size{font-size:.75rem;color:var(--accent);margin-top:.4rem}
-        .proof-arrow{display:flex;align-items:center;justify-content:center;padding:0 .5rem;color:var(--muted);font-size:1.2rem;flex-shrink:0}
-
-        /* --- PROOF STEPS --- */
-        .step-list{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem}
-        .step{display:flex;gap:.85rem;padding:.85rem 1rem;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02);cursor:pointer;transition:border-color .2s}
+        /* PROOF CHAIN */
+        .proof-chain-wrap{padding:1rem;display:flex;flex-direction:column;flex:1;overflow:hidden}
+        .proof-nodes{display:flex;align-items:stretch;gap:.5rem;margin-bottom:.85rem;flex-shrink:0}
+        .proof-node{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;
+                    padding:.85rem .6rem;text-align:center;transition:all .22s}
+        .proof-node.verified{border-color:var(--success);box-shadow:0 0 16px rgba(16,185,129,.2)}
+        .proof-node.landmark{border-color:var(--gold);box-shadow:0 0 16px rgba(245,158,11,.18)}
+        .node-icon{font-size:1.5rem;display:block;margin-bottom:.3rem}
+        .node-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+        .node-name{font-size:.82rem;font-weight:600;margin:.2rem 0}
+        .node-size{font-size:.68rem;color:var(--accent)}
+        .proof-arrow{display:flex;align-items:center;color:var(--muted);font-size:1rem;padding:0 .2rem}
+        .step-controls{display:flex;gap:.5rem;align-items:center;flex-shrink:0;margin-bottom:.75rem}
+        .step-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.45rem}
+        .step-list::-webkit-scrollbar{width:4px}
+        .step-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+        .step{display:flex;gap:.7rem;padding:.7rem .85rem;border:1px solid var(--border);border-radius:9px;
+              background:rgba(255,255,255,.02);cursor:pointer;transition:border-color .18s}
         .step:hover{border-color:rgba(255,255,255,.15)}
-        .step.pass{border-left:3px solid var(--success)}
-        .step.fail{border-left:3px solid var(--danger)}
-        .step-num{width:26px;height:26px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;flex-shrink:0}
+        .step.pass{border-left:3px solid var(--success)} .step.fail{border-left:3px solid var(--danger)}
+        .step-num{width:22px;height:22px;border-radius:50%;background:var(--primary);display:flex;
+                  align-items:center;justify-content:center;font-size:.68rem;font-weight:600;flex-shrink:0}
         .step-body{flex:1;min-width:0}
-        .step-actor{font-size:.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
-        .step-action{font-size:.9rem;font-weight:500;margin:.15rem 0}
-        .step-detail{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);white-space:pre-wrap;max-height:0;overflow:hidden;transition:max-height .3s ease}
-        .step.open .step-detail{max-height:400px}
-        .step-icon{font-size:1.1rem;flex-shrink:0;align-self:center}
+        .step-actor{font-size:.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+        .step-action{font-size:.83rem;font-weight:500;margin:.1rem 0}
+        .step-detail{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);
+                     white-space:pre-wrap;max-height:0;overflow:hidden;transition:max-height .28s ease}
+        .step.open .step-detail{max-height:300px}
+        .step-icon{font-size:.95rem;flex-shrink:0;align-self:center}
 
-        /* --- DIAG TABS --- */
-        .tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
-        .tab{padding:.4rem .85rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.85rem;cursor:pointer;transition:all .2s}
-        .tab:hover,.tab.active{background:rgba(79,70,229,.15);border-color:rgba(79,70,229,.4);color:var(--text)}
-        .tab.gold:hover,.tab.gold.active{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.4);color:var(--gold)}
-
-        @media(max-width:768px){.grid-2{grid-template-columns:1fr}h1{font-size:2.2rem}.proof-chain{flex-direction:column}}
+        /* DIAG PANEL */
+        .diag-wrap{display:flex;flex-direction:column;flex:1;padding:1rem;overflow:hidden}
+        .diag-tabs{display:flex;gap:.3rem;flex-shrink:0;margin-bottom:.75rem;flex-wrap:wrap}
+        .diag-terminal{flex:1;overflow:hidden;display:flex;flex-direction:column}
     </style>
 </head>
 <body>
 <header>
+    <div class="brand">
+        <h1>Next-Gen WebPKI</h1>
+        <p class="subtitle">Secured by an experimental Post-Quantum ready <strong>Merkle Tree Certificate</strong> — inclusion proofs instead of certificate chains, with a <strong>Landmark</strong> intermediary CA.</p>
+    </div>
     <div class="badge">TLS 1.3 Active</div>
-    <h1>Next-Gen WebPKI</h1>
-    <p class="subtitle">Secured by an experimental Post-Quantum ready <strong>Merkle Tree Certificate</strong> — inclusion proofs instead of massive certificate chains, with a <strong>Landmark</strong> intermediary CA.</p>
 </header>
 
-<!-- Row 1: Connection Info + Verify -->
-<div class="wrap">
-    <div class="grid-2">
+<div class="layout">
 
-        <!-- Connection Security -->
-        <div class="card">
-            <h2>🔒 Connection Security</h2>
-            <div class="row"><span class="label">Protocol</span><span class="val val-green">TLS 1.3</span></div>
-            <div class="row"><span class="label">Certificate Type</span><span class="val">Merkle Tree Cert (MTC)</span></div>
-            <div class="row"><span class="label">Identity</span><span class="val">localhost, 127.0.0.1</span></div>
-            <div class="row"><span class="label">Public Key</span><span class="val">prime256v1 (ECDSA P-256)</span></div>
-            <div class="row"><span class="label">Lifetime / Window</span><span class="val val-gold">7 days · ~9.2 MB</span></div>
-            <div class="row">
-                <span class="label">Artifacts</span>
-                <span class="val">
-                    <a href="/api/files/cert" style="color:var(--accent);text-decoration:none">.mtc</a> ·
-                    <a href="/api/files/vw" style="color:var(--accent);text-decoration:none">.vw</a> ·
-                    <a href="/api/files/params" style="color:var(--accent);text-decoration:none">ca-params</a>
-                </span>
+    <!-- LEFT: Connection Security + Verify -->
+    <div class="left-panel">
+        <div class="left-scroll">
+            <!-- Connection Info -->
+            <div class="card">
+                <h2>🔒 Connection Security</h2>
+                <div class="row"><span class="label">Protocol</span><span class="val val-green">TLS 1.3</span></div>
+                <div class="row"><span class="label">Certificate Type</span><span class="val">Merkle Tree Cert (MTC)</span></div>
+                <div class="row"><span class="label">Identity</span><span class="val">localhost, 127.0.0.1</span></div>
+                <div class="row"><span class="label">Public Key</span><span class="val">prime256v1 (P-256)</span></div>
+                <div class="row"><span class="label">Lifetime / Window</span><span class="val val-gold">7 days · ~9.2 MB</span></div>
+                <div class="row">
+                    <span class="label">Artifacts</span>
+                    <span class="val">
+                        <a href="/api/files/cert" style="color:var(--accent);text-decoration:none">.mtc</a> ·
+                        <a href="/api/files/vw" style="color:var(--accent);text-decoration:none">.vw</a> ·
+                        <a href="/api/files/params" style="color:var(--accent);text-decoration:none">ca-params</a>
+                    </span>
+                </div>
+                <h3>Artifact Sizes</h3>
+                <div class="size-grid" id="sizeGrid"><div class="size-chip"><div class="chip-name">Loading…</div></div></div>
             </div>
 
-            <!-- Artifact Sizes -->
-            <h3 style="margin-top:1.25rem">Artifact Sizes</h3>
-            <div class="size-grid" id="sizeGrid">
-                <div class="size-chip"><div class="chip-name">Loading…</div></div>
+            <!-- Live Verify -->
+            <div class="card gold-top">
+                <h2>⚡ Live Verification</h2>
+                <p style="color:var(--muted);font-size:.82rem;line-height:1.5;margin-bottom:.9rem">
+                    Verify the Merkle inclusion proof against the signed validity window.
+                </p>
+                <button class="btn" id="verifyBtn" onclick="runVerify('root')">
+                    <span id="verifyTxt">Verify via Root CA</span>
+                    <div class="spinner" id="verifySpin"></div>
+                </button>
+                <button class="btn btn-gold" style="margin-top:.5rem" id="verifyLmBtn" onclick="runVerify('landmark')">
+                    <span id="verifyLmTxt">Verify via Landmark CA</span>
+                    <div class="spinner" id="verifyLmSpin"></div>
+                </button>
+                <div class="terminal" id="verifyOutput" style="max-height:160px;margin-top:.65rem"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Tabbed (Proof Chain | Payload Decoder) -->
+    <div class="right-panel">
+        <div class="tab-bar">
+            <button class="tab active" id="tabProof" onclick="showTab('proof')">🌳 Merkle Proof Chain</button>
+            <button class="tab" id="tabDiag" onclick="showTab('diag')">🔬 Payload Decoder</button>
+        </div>
+
+        <!-- Proof Chain Tab -->
+        <div class="tab-content active" id="tabProof-panel">
+            <div class="proof-chain-wrap">
+                <div class="proof-nodes">
+                    <div class="proof-node" id="nodeRoot">
+                        <span class="node-icon">🏛️</span>
+                        <div class="node-label">Root CA</div>
+                        <div class="node-name">62253.12.15</div>
+                        <div class="node-size">—</div>
+                    </div>
+                    <div class="proof-arrow">→</div>
+                    <div class="proof-node landmark" id="nodeLandmark">
+                        <span class="node-icon">📍</span>
+                        <div class="node-label">Landmark CA</div>
+                        <div class="node-name">62253.12.15.1</div>
+                        <div class="node-size">—</div>
+                    </div>
+                    <div class="proof-arrow">→</div>
+                    <div class="proof-node" id="nodeLeaf">
+                        <span class="node-icon">📄</span>
+                        <div class="node-label">Leaf Cert</div>
+                        <div class="node-name">localhost</div>
+                        <div class="node-size">—</div>
+                    </div>
+                </div>
+                <div class="step-controls">
+                    <button class="btn" style="width:auto;padding:.45rem 1.1rem;font-size:.85rem" onclick="runProofChain()">
+                        <span id="chainTxt">Run Proof Chain</span>
+                        <div class="spinner" id="chainSpin"></div>
+                    </button>
+                    <button class="btn-ghost btn" onclick="collapseAllSteps()">Collapse All</button>
+                </div>
+                <div class="step-list" id="stepList"></div>
             </div>
         </div>
 
-        <!-- Live Verify -->
-        <div class="card">
-            <h2>⚡ Live Verification</h2>
-            <p style="color:var(--muted);font-size:.95rem;line-height:1.6;margin-bottom:1.25rem">
-                Verify the Merkle inclusion proof for this server's certificate against the Root CA's signed validity window.
-            </p>
-
-            <button class="btn btn-block" id="verifyBtn" onclick="runVerify('root')">
-                <span id="verifyTxt">Verify via Root CA</span>
-                <div class="spinner" id="verifySpin"></div>
-            </button>
-
-            <button class="btn btn-gold btn-block" style="margin-top:.75rem" id="verifyLmBtn" onclick="runVerify('landmark')">
-                <span id="verifyLmTxt">Verify via Landmark CA</span>
-                <div class="spinner" id="verifyLmSpin"></div>
-            </button>
-
-            <div class="terminal" id="verifyOutput"></div>
+        <!-- Payload Decoder Tab -->
+        <div class="tab-content" id="tabDiag-panel">
+            <div class="diag-wrap">
+                <div class="diag-tabs">
+                    <button class="tab active" onclick="selectDiag(this,'cert')">Leaf Cert</button>
+                    <button class="tab" onclick="selectDiag(this,'vw')">Root VW</button>
+                    <button class="tab" onclick="selectDiag(this,'ca-params')">Root CA Params</button>
+                    <button class="tab gold" onclick="selectDiag(this,'landmark-cert')">Landmark Cert</button>
+                    <button class="tab gold" onclick="selectDiag(this,'landmark-vw')">Landmark VW</button>
+                    <button class="tab gold" onclick="selectDiag(this,'landmark-params')">Landmark Params</button>
+                </div>
+                <div class="diag-terminal">
+                    <div class="terminal" id="diagOutput" style="border-left:3px solid var(--teal)">Select a tab above to decode a payload.</div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-<!-- Row 2: Proof Chain Visualizer -->
-<div class="wrap" style="padding-top:0">
-    <div class="card card-accent-gold full">
-        <h2>🌳 Merkle Proof Chain</h2>
-        <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">
-            Visual walkthrough of the trust chain: <strong>Root CA → Landmark CA → Leaf Certificate</strong>. Click <em>Run Proof Chain</em> to fetch and expand each step.
-        </p>
-
-        <!-- Chain diagram (placeholder until loaded) -->
-        <div class="proof-chain" id="proofChain">
-            <div class="proof-node" id="nodeRoot">
-                <span class="node-icon">🏛️</span>
-                <div class="node-label">Root CA</div>
-                <div class="node-name">62253.12.15</div>
-                <div class="node-meta">—</div>
-            </div>
-            <div class="proof-arrow">→</div>
-            <div class="proof-node landmark" id="nodeLandmark">
-                <span class="node-icon">📍</span>
-                <div class="node-label">Landmark CA</div>
-                <div class="node-name">62253.12.15.1</div>
-                <div class="node-meta">—</div>
-            </div>
-            <div class="proof-arrow">→</div>
-            <div class="proof-node" id="nodeLeaf">
-                <span class="node-icon">📄</span>
-                <div class="node-label">Leaf Certificate</div>
-                <div class="node-name">localhost</div>
-                <div class="node-meta">—</div>
-            </div>
-        </div>
-
-        <div class="btn-row">
-            <button class="btn" onclick="runProofChain()">
-                <span id="chainTxt">Run Proof Chain</span>
-                <div class="spinner" id="chainSpin"></div>
-            </button>
-            <button class="btn btn-ghost btn-sm" onclick="collapseAllSteps()">Collapse All</button>
-        </div>
-
-        <div class="step-list" id="stepList"></div>
-    </div>
-</div>
-
-<!-- Row 3: Diagnostics -->
-<div class="wrap" style="padding-top:0">
-    <div class="card card-accent-teal full">
-        <h2>🔬 Payload Decoder</h2>
-
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab active" onclick="selectTab(this,'cert')">Leaf Cert</button>
-            <button class="tab" onclick="selectTab(this,'vw')">Root VW</button>
-            <button class="tab" onclick="selectTab(this,'ca-params')">Root CA Params</button>
-            <button class="tab gold" onclick="selectTab(this,'landmark-cert')">Landmark Cert</button>
-            <button class="tab gold" onclick="selectTab(this,'landmark-vw')">Landmark VW</button>
-            <button class="tab gold" onclick="selectTab(this,'landmark-params')">Landmark Params</button>
-        </div>
-
-        <div class="terminal terminal-always" id="diagOutput" style="border-left:3px solid var(--teal)">Waiting for input… Select a tab above to decode a payload.</div>
-    </div>
-</div>
-
-<div style="height:3rem"></div>
 
 <script>
-// ---- File Sizes ----
+// ---- Tab switching ----
+function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-bar .tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1) + '-panel').classList.add('active');
+    document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+    if (name === 'diag' && !diagLoaded) { loadDiag('cert'); diagLoaded = true; }
+}
+
+// ---- File Sizes (DOM API - no innerHTML) ----
 async function loadSizes() {
     try {
         const r = await fetch('/api/file-sizes');
         const d = await r.json();
         const grid = document.getElementById('sizeGrid');
-        const labels = {
-            cert: 'website.mtc',
-            vw: 'Root .vw',
-            'landmark-vw': 'Landmark .vw',
-            'landmark-cert': 'Landmark .mtc',
-            'ca-params': 'CA Params'
-        };
         grid.innerHTML = '';
-        for (const [k, lbl] of Object.entries(labels)) {
+        const labels = {
+            cert: ['website.mtc', 'color:var(--accent)'],
+            vw: ['Root .vw', 'color:var(--gold)'],
+            'landmark-vw': ['Landmark .vw', 'color:var(--gold)'],
+            'landmark-cert': ['Landmark .mtc', 'color:var(--accent)'],
+            'ca-params': ['CA Params', 'color:var(--teal)']
+        };
+        for (const [k, [lbl, clr]] of Object.entries(labels)) {
             const item = d[k] || { bytes: 0, mb: 'N/A' };
-            const colorClass = k.includes('vw') ? 'color:var(--gold)' : 'color:var(--accent)';
-            grid.innerHTML += `
-                <div class="size-chip">
-                    <div class="chip-name">${lbl}</div>
-                    <div class="chip-val" style="${colorClass}">${fmtBytes(item.bytes)}</div>
-                    <div class="chip-mb">${item.mb}</div>
-                </div>`;
+            const chip = document.createElement('div');
+            chip.className = 'size-chip';
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'chip-name';
+            nameEl.textContent = lbl;
+
+            const valEl = document.createElement('div');
+            valEl.className = 'chip-val';
+            valEl.style.cssText = clr;
+            valEl.textContent = fmtBytes(item.bytes);
+
+            const mbEl = document.createElement('div');
+            mbEl.className = 'chip-mb';
+            mbEl.textContent = item.mb;
+
+            chip.appendChild(nameEl);
+            chip.appendChild(valEl);
+            chip.appendChild(mbEl);
+            grid.appendChild(chip);
         }
     } catch(e) {
-        document.getElementById('sizeGrid').innerHTML = '<div style="color:var(--danger);font-size:.85rem">Failed to load sizes</div>';
+        const grid = document.getElementById('sizeGrid');
+        grid.textContent = 'Failed to load sizes';
+        grid.style.color = 'var(--danger)';
     }
 }
+
 function fmtBytes(b) {
     if (!b) return '0 B';
     if (b < 1024) return b + ' B';
@@ -286,14 +326,13 @@ function fmtBytes(b) {
 // ---- Verify ----
 async function runVerify(ca) {
     const isLm = ca === 'landmark';
-    const btnId = isLm ? 'verifyLmBtn' : 'verifyBtn';
     const txtId = isLm ? 'verifyLmTxt' : 'verifyTxt';
     const spinId = isLm ? 'verifyLmSpin' : 'verifySpin';
     const out = document.getElementById('verifyOutput');
 
     document.getElementById(txtId).style.display = 'none';
     document.getElementById(spinId).style.display = 'block';
-    out.classList.remove('show');
+    out.style.display = 'none';
 
     try {
         const url = isLm ? '/api/verify/landmark' : '/api/verify';
@@ -303,7 +342,8 @@ async function runVerify(ca) {
         setTimeout(() => {
             document.getElementById(spinId).style.display = 'none';
             document.getElementById(txtId).style.display = 'inline';
-            out.className = 'terminal show';
+            out.style.display = 'block';
+            out.className = 'terminal';
             if (d.success) {
                 out.style.color = '#a3be8c';
                 out.textContent = (isLm ? '📍 [LANDMARK] ' : '🏛️ [ROOT CA] ') + '✅ Inclusion proof VERIFIED!\n\n' + (d.output || 'Exit code 0 — no stdout.');
@@ -311,11 +351,12 @@ async function runVerify(ca) {
                 out.style.color = '#bf616a';
                 out.textContent = (isLm ? '📍 [LANDMARK] ' : '🏛️ [ROOT CA] ') + '❌ Verification FAILED!\n\n' + d.output;
             }
-        }, 700);
+        }, 600);
     } catch(e) {
         document.getElementById(spinId).style.display = 'none';
         document.getElementById(txtId).style.display = 'inline';
-        out.className = 'terminal show terminal-err';
+        out.style.display = 'block';
+        out.className = 'terminal terminal-err';
         out.textContent = '❌ Network failure — could not reach backend.';
     }
 }
@@ -333,7 +374,6 @@ async function runProofChain() {
         document.getElementById('chainSpin').style.display = 'none';
         document.getElementById('chainTxt').style.display = 'inline';
 
-        // Update chain nodes
         updateNode('nodeRoot', d.root_ca, '🏛️', 'Root CA', false);
         updateNode('nodeLandmark', d.landmark, '📍', 'Landmark CA', true);
         updateNode('nodeLeaf', d.leaf_cert, '📄', 'Leaf Cert', false);
@@ -343,41 +383,64 @@ async function runProofChain() {
             document.getElementById('nodeLeaf').classList.add('verified');
         }
 
-        // Render steps
         const list = document.getElementById('stepList');
         (d.steps || []).forEach(s => {
             const div = document.createElement('div');
-            div.className = `step ${s.verified ? 'pass' : 'fail'}`;
-            div.innerHTML = `
-                <div class="step-num">${s.step}</div>
-                <div class="step-body">
-                    <div class="step-actor">${s.actor}</div>
-                    <div class="step-action">${s.action}</div>
-                    <div class="step-detail">${escHtml(s.result || '')}</div>
-                </div>
-                <div class="step-icon">${s.verified ? '✅' : '❌'}</div>`;
+            div.className = 'step ' + (s.verified ? 'pass' : 'fail');
+
+            const numEl = document.createElement('div');
+            numEl.className = 'step-num';
+            numEl.textContent = s.step;
+
+            const bodyEl = document.createElement('div');
+            bodyEl.className = 'step-body';
+
+            const actorEl = document.createElement('div');
+            actorEl.className = 'step-actor';
+            actorEl.textContent = s.actor;
+
+            const actionEl = document.createElement('div');
+            actionEl.className = 'step-action';
+            actionEl.textContent = s.action;
+
+            const detailEl = document.createElement('div');
+            detailEl.className = 'step-detail';
+            detailEl.textContent = s.result || '';
+
+            bodyEl.appendChild(actorEl);
+            bodyEl.appendChild(actionEl);
+            bodyEl.appendChild(detailEl);
+
+            const iconEl = document.createElement('div');
+            iconEl.className = 'step-icon';
+            iconEl.textContent = s.verified ? '✅' : '❌';
+
+            div.appendChild(numEl);
+            div.appendChild(bodyEl);
+            div.appendChild(iconEl);
             div.onclick = () => div.classList.toggle('open');
             list.appendChild(div);
         });
     } catch(e) {
         document.getElementById('chainSpin').style.display = 'none';
         document.getElementById('chainTxt').style.display = 'inline';
-        document.getElementById('stepList').innerHTML = '<div style="color:var(--danger);padding:.75rem">❌ Failed to fetch proof chain from backend.</div>';
+        const errEl = document.createElement('div');
+        errEl.style.cssText = 'color:var(--danger);padding:.75rem';
+        errEl.textContent = '❌ Failed to fetch proof chain from backend.';
+        document.getElementById('stepList').appendChild(errEl);
     }
 }
 
 function updateNode(id, data, icon, role, isLandmark) {
     if (!data) return;
     const el = document.getElementById(id);
-    const batchTxt = data.batch_number ? `Batch #${data.batch_number}` : '';
-    const headTxt = data.tree_head ? `Root: ${data.tree_head}` : '';
-    const sizeTxt = data.size_bytes ? fmtBytes(data.size_bytes) : '';
-    el.innerHTML = `
-        <span class="node-icon">${icon}</span>
-        <div class="node-label">${role}</div>
-        <div class="node-name">${data.name || role}</div>
-        <div class="node-meta">${batchTxt}${batchTxt && headTxt ? '\n' : ''}${headTxt}</div>
-        ${sizeTxt ? `<div class="node-size">${sizeTxt}</div>` : ''}`;
+    const sizeTxt = data.size_bytes ? fmtBytes(data.size_bytes) : '—';
+    const batchTxt = data.batch_number ? 'Batch #' + data.batch_number : '';
+
+    el.querySelector('.node-icon').textContent = icon;
+    el.querySelector('.node-label').textContent = role;
+    el.querySelector('.node-name').textContent = data.name || role;
+    el.querySelector('.node-size').textContent = sizeTxt + (batchTxt ? '  ' + batchTxt : '');
     if (isLandmark) el.classList.add('landmark');
 }
 
@@ -385,42 +448,37 @@ function collapseAllSteps() {
     document.querySelectorAll('.step.open').forEach(s => s.classList.remove('open'));
 }
 
-// ---- Diagnostics Tabs ----
-let activeTarget = 'cert';
-function selectTab(btn, target) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+// ---- Payload Decoder ----
+let diagLoaded = false;
+let activeDiagTarget = 'cert';
+
+function selectDiag(btn, target) {
+    document.querySelectorAll('.diag-tabs .tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
-    activeTarget = target;
+    activeDiagTarget = target;
     loadDiag(target);
 }
 
 async function loadDiag(target) {
     const out = document.getElementById('diagOutput');
-    out.textContent = `Loading ${target}…`;
+    out.textContent = 'Loading ' + target + '…';
     out.style.color = 'var(--muted)';
     try {
-        const r = await fetch(`/api/inspect?target=${target}`);
+        const r = await fetch('/api/inspect?target=' + target);
         const d = await r.json();
         out.style.color = d.success ? '#e5e9f0' : '#bf616a';
         out.textContent = d.success
-            ? `[Decoded: ${target}]\n\n${d.output}`
-            : `[Error decoding: ${target}]\n\n${d.output}`;
-        out.style.transform = 'scale(0.99)';
-        setTimeout(() => out.style.transform = 'scale(1)', 100);
+            ? '[Decoded: ' + target + ']\n\n' + d.output
+            : '[Error decoding: ' + target + ']\n\n' + d.output;
     } catch(e) {
         out.style.color = '#bf616a';
         out.textContent = '❌ Network error — backend unreachable.';
     }
 }
 
-function escHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
 // ---- Init ----
 window.addEventListener('DOMContentLoaded', () => {
     loadSizes();
-    loadDiag('cert');
 });
 </script>
 </body>

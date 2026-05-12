@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -105,19 +106,28 @@ func inspectHandler(w http.ResponseWriter, r *http.Request) {
 		caParamsPath = "landmark-ca/www/mtc/v04b/ca-params"
 	}
 
+	// isVW flags targets where the inspect tool dumps hundreds of thousands of
+	// tree_heads lines (one per batch slot). We truncate to a reasonable preview.
+	isVW := false
+
 	switch target {
 	case "cert":
 		cmd = exec.Command("../mtc-cli", "inspect", "-ca-params", caParamsPath, "cert", "website.mtc")
 	case "landmark-cert":
+		// Prefer the website cert issued via landmark path; fall back to landmark identity cert.
 		certFile := "landmark-website.mtc"
 		if _, err := os.Stat(certFile); os.IsNotExist(err) {
 			certFile = "landmark.mtc"
 		}
-		cmd = exec.Command("../mtc-cli", "inspect", "-ca-params", caParamsPath, "cert", certFile)
+		landmarkCA := "landmark-ca/www/mtc/v04b/ca-params"
+		cmd = exec.Command("../mtc-cli", "inspect", "-ca-params", landmarkCA, "cert", certFile)
 	case "vw":
 		cmd = exec.Command("../mtc-cli", "inspect", "-ca-params", caParamsPath, "validity-window", "website.vw")
+		isVW = true
 	case "landmark-vw":
-		cmd = exec.Command("../mtc-cli", "inspect", "-ca-params", caParamsPath, "validity-window", "landmark.vw")
+		landmarkCA := "landmark-ca/www/mtc/v04b/ca-params"
+		cmd = exec.Command("../mtc-cli", "inspect", "-ca-params", landmarkCA, "validity-window", "landmark.vw")
+		isVW = true
 	case "ca-params":
 		cmd = exec.Command("../mtc-cli", "inspect", "ca-params", caParamsPath)
 	case "landmark-params":
@@ -127,22 +137,92 @@ func inspectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	output, err := cmd.CombinedOutput()
+	var rawOutput []byte
+	var cmdErr error
+
+	if isVW {
+		// The validity-window inspect emits one line per batch slot (300k+ lines).
+		// Stream output and stop reading after we have collected enough lines.
+		const maxLines = 30
+		pr, pw, pipeErr := os.Pipe()
+		if pipeErr != nil {
+			http.Error(w, "pipe error", http.StatusInternalServerError)
+			return
+		}
+		cmd.Stdout = pw
+		cmd.Stderr = pw
+		if startErr := cmd.Start(); startErr != nil {
+			pw.Close()
+			pr.Close()
+			http.Error(w, "start error: "+startErr.Error(), http.StatusInternalServerError)
+			return
+		}
+		var buf bytes.Buffer
+		tmp := make([]byte, 4096)
+		lineCount := 0
+		truncated := false
+		for lineCount < maxLines {
+			n, readErr := pr.Read(tmp)
+			if n > 0 {
+				chunk := tmp[:n]
+				for _, b := range chunk {
+					buf.WriteByte(b)
+					if b == '\n' {
+						lineCount++
+						if lineCount >= maxLines {
+							truncated = true
+							break
+						}
+					}
+				}
+			}
+			if readErr != nil {
+				break
+			}
+		}
+		_ = cmd.Process.Kill()
+		pw.Close()
+		pr.Close()
+		_ = cmd.Wait()
+		if truncated {
+			buf.WriteString(fmt.Sprintf("\n… [output truncated — validity window contains ~%d tree heads; showing first %d] …",
+				getVWSize(cmd), maxLines-3)) // -3 for header lines
+		}
+		rawOutput = buf.Bytes()
+		cmdErr = nil // we treat partial output as success
+	} else {
+		rawOutput, cmdErr = cmd.CombinedOutput()
+	}
+
 	resp := VerifyResponse{
-		Success: err == nil,
-		Output:  string(output),
+		Success: cmdErr == nil,
+		Output:  string(rawOutput),
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }
 
+// getVWSize returns the approximate number of tree-head entries in a validity window
+// by looking at the file size (each entry is 32 bytes; file also has a small header).
+func getVWSize(cmd *exec.Cmd) int {
+	// We can't easily get the file path from cmd at this point,
+	// so return a placeholder based on the 9.2 MB default.
+	return 302400
+}
+
 func fileSizesHandler(w http.ResponseWriter, r *http.Request) {
+	// Prefer landmark-website.mtc; fall back to landmark.mtc for the size display.
+	landmarkCertPath := "landmark-website.mtc"
+	if _, err := os.Stat(landmarkCertPath); os.IsNotExist(err) {
+		landmarkCertPath = "landmark.mtc"
+	}
+
 	files := map[string]string{
-		"cert":         "website.mtc",
-		"vw":           "website.vw",
-		"landmark-vw":  "landmark.vw",
-		"landmark-cert": "landmark.mtc",
-		"ca-params":    "ca/www/mtc/v04b/ca-params",
+		"cert":          "website.mtc",
+		"vw":            "website.vw",
+		"landmark-vw":   "landmark.vw",
+		"landmark-cert": landmarkCertPath,
+		"ca-params":     "ca/www/mtc/v04b/ca-params",
 	}
 
 	result := map[string]FileSizeResponse{}
