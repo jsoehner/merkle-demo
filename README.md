@@ -41,10 +41,23 @@ You can build and run this entire demonstration securely inside a hardened Chain
 # Build the multi-arch image locally
 docker build -t mtc-demo:latest .
 
-# Run the container mapping the secure port
-docker run -p 8443:8443 mtc-demo:latest
+# Run the container mapping both dashboard ports
+docker run -p 8443:8443 -p 8444:8444 mtc-demo:latest
 ```
-Then simply open `https://localhost:8443` in your browser.
+
+Then simply open your browser to either experience:
+* **MTC Demo Website (HTTPS):** `https://localhost:8443`
+* **DigiCert MTC Playground (HTTP):** `http://localhost:8444`
+
+## DigiCert MTC Playground
+
+In addition to the main demo, we have integrated the **DigiCert MTC Playground** dashboard. This interface provides an interactive environment to generate and verify MTC certificates in two distinct modes:
+
+1. **MTC-Spec (Primary):** Implements the `id-alg-mtcProof` signature algorithm, where the inclusion proof is carried directly in the `signatureValue` field.
+2. **Legacy Embedded (Compatibility):** Embeds the MTC inclusion proof as a non-critical X.509 extension for backward compatibility with existing systems.
+
+![DigiCert MTC Playground Dashboard](./demo/screenshots/playground_dashboard.png)
+
 
 ## Quick Start
 

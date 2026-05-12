@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DigiCert MTC Playground — CA Extension Demo</title>
+<meta name="description" content="Interactive DigiCert ca-extension-mtc-playground: generate and verify MTC-spec and legacy embedded proof certificates.">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06080e;--panel:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.08);--primary:#6366f1;--pg:#4f46e5;--accent:#a78bfa;--success:#10b981;--danger:#ef4444;--gold:#f59e0b;--teal:#06b6d4;--text:#f1f5f9;--muted:#94a3b8;--hh:64px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);background-image:radial-gradient(circle at 20% 40%,rgba(99,102,241,.12),transparent 30%),radial-gradient(circle at 80% 10%,rgba(167,139,250,.1),transparent 28%),radial-gradient(circle at 50% 90%,rgba(6,182,212,.07),transparent 25%)}
+header{height:var(--hh);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;z-index:10}
+.brand{display:flex;align-items:center;gap:.75rem}
+h1{font-size:1.3rem;font-weight:700;background:linear-gradient(135deg,#818cf8,#a78bfa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{font-size:.8rem;color:var(--muted);max-width:520px;line-height:1.4}
+.badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(99,102,241,.12);color:var(--accent);border:1px solid rgba(99,102,241,.3);padding:.25rem .8rem;border-radius:999px;font-size:.78rem;flex-shrink:0}
+.badge::before{content:'';width:7px;height:7px;background:var(--accent);border-radius:50%;box-shadow:0 0 7px var(--accent);animation:pd 2s ease infinite}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.3}}
+.layout{display:flex;height:calc(100vh - var(--hh));overflow:hidden}
+.left{width:34%;min-width:290px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.left-scroll{flex:1;overflow-y:auto;padding:1rem}
+.left-scroll::-webkit-scrollbar{width:4px}
+.left-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+.right{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tab-bar{display:flex;gap:.35rem;padding:.65rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.tab{padding:.35rem .85rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.82rem;cursor:pointer;transition:all .18s}
+.tab:hover,.tab.active{background:rgba(99,102,241,.15);border-color:rgba(99,102,241,.45);color:var(--text)}
+.tab.teal:hover,.tab.teal.active{background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.4);color:var(--teal)}
+.tab-content{flex:1;overflow:hidden;display:none;flex-direction:column}
+.tab-content.active{display:flex}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.2rem;backdrop-filter:blur(12px);position:relative;overflow:hidden;margin-bottom:.85rem}
+.card:last-child{margin-bottom:0}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--primary),transparent);opacity:.6}
+.card.teal-top::before{background:linear-gradient(90deg,transparent,var(--teal),transparent)}
+.card.gold-top::before{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+h2{font-size:1rem;font-weight:600;margin-bottom:.9rem;display:flex;align-items:center;gap:.4rem}
+h3{font-size:.82rem;font-weight:500;color:var(--muted);margin-bottom:.5rem;margin-top:.8rem}
+.row{display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.lbl{color:var(--muted);font-size:.82rem}
+.val{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:#d1d5db}
+.val-g{color:var(--success)}.val-a{color:var(--accent)}.val-t{color:var(--teal)}.val-gold{color:var(--gold)}
+.domain-row{display:flex;gap:.5rem;margin-bottom:.75rem;align-items:center}
+.domain-row input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:.45rem .75rem;color:var(--text);font-family:'Outfit',sans-serif;font-size:.85rem;outline:none;transition:border-color .18s}
+.domain-row input:focus{border-color:rgba(99,102,241,.5)}
+.mode-select{display:flex;gap:.4rem;margin-bottom:.85rem}
+.mode-btn{flex:1;padding:.4rem .5rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;transition:all .18s;text-align:center}
+.mode-btn.sel{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.5);color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem 1rem;background:linear-gradient(135deg,var(--pg),var(--accent));color:#fff;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:0 3px 12px rgba(99,102,241,.3);width:100%}
+.btn:hover{filter:brightness(1.12);box-shadow:0 5px 18px rgba(99,102,241,.4)}
+.btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
+.btn-teal{background:linear-gradient(135deg,#0891b2,#06b6d4);box-shadow:0 3px 12px rgba(6,182,212,.25)}
+.btn-teal:hover{box-shadow:0 5px 18px rgba(6,182,212,.35)}
+.btn-ghost{background:transparent;border:1px solid var(--border);box-shadow:none;color:var(--muted);width:auto;padding:.35rem .8rem;font-size:.8rem}
+.btn-ghost:hover{border-color:rgba(255,255,255,.2);color:var(--text)}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin .8s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.terminal{background:#080d1a;border:1px solid var(--border);border-radius:9px;padding:.9rem;font-family:'JetBrains Mono',monospace;font-size:.74rem;color:#a3be8c;white-space:pre-wrap;overflow-y:auto;flex:1;margin-top:.75rem;min-height:0}
+.terminal.err{color:#bf616a}
+.step-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.4rem;padding:1rem}
+.step-list::-webkit-scrollbar{width:4px}
+.step-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+.step{display:flex;gap:.7rem;padding:.65rem .85rem;border:1px solid var(--border);border-radius:9px;background:rgba(255,255,255,.02);cursor:pointer;transition:border-color .18s}
+.step:hover{border-color:rgba(255,255,255,.15)}
+.step.pass{border-left:3px solid var(--success)}.step.fail{border-left:3px solid var(--danger)}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--pg);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:600;flex-shrink:0}
+.step-body{flex:1;min-width:0}
+.step-lbl{font-size:.83rem;font-weight:500;margin:.1rem 0}
+.step-detail{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);white-space:pre-wrap;max-height:0;overflow:hidden;transition:max-height .28s ease}
+.step.open .step-detail{max-height:300px}
+.step-icon{font-size:.95rem;flex-shrink:0;align-self:center}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem}
+.info-chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:.6rem}
+.chip-name{font-size:.67rem;color:var(--muted);margin-bottom:.2rem}
+.chip-val{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:600;color:var(--teal);word-break:break-all}
+.spec-wrap{padding:1rem;overflow-y:auto;flex:1}
+.spec-section{margin-bottom:1rem}
+.spec-section h3{font-size:.85rem;color:var(--accent);margin-bottom:.5rem}
+.spec-tag{display:inline-block;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:6px;padding:.15rem .5rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--accent);margin:.15rem .15rem .15rem 0}
+.spec-tag.teal{background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3);color:var(--teal)}
+.spec-tag.gold{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:var(--gold)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeUp .3s ease forwards}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>DigiCert MTC Playground</h1>
+    <p class="subtitle">Interactive demo of <strong>ca-extension-mtc-playground</strong> — generate & verify MTC-spec and embedded-proof certificates, end-to-end in-browser.</p>
+  </div>
+  <div class="badge">draft-ietf-plants-merkle-tree-certs-01</div>
+</header>
+
+<div class="layout">
+  <!-- LEFT -->
+  <div class="left">
+    <div class="left-scroll">
+      <!-- Spec Info -->
+      <div class="card">
+        <h2>📐 Implementation Info</h2>
+        <div class="row"><span class="lbl">Spec</span><span class="val val-a">draft-ietf-plants-merkle-tree-certs-01</span></div>
+        <div class="row"><span class="lbl">Primary OID</span><span class="val val-t">1.3.6.1.4.1.44363.47.0</span></div>
+        <div class="row"><span class="lbl">Key Algorithm</span><span class="val">ECDSA P-256</span></div>
+        <div class="row"><span class="lbl">Merkle Leaf Hash</span><span class="val val-g">SHA-256(0x00 ∥ data)</span></div>
+        <div class="row"><span class="lbl">Merkle Node Hash</span><span class="val val-g">SHA-256(0x01 ∥ L ∥ R)</span></div>
+        <div class="row"><span class="lbl">tlog Protocol</span><span class="val val-t">C2SP tlog-tiles</span></div>
+        <div class="row"><span class="lbl">ACME Support</span><span class="val val-gold">RFC 8555</span></div>
+      </div>
+
+      <!-- Certificate Modes -->
+      <div class="card teal-top">
+        <h2>🎭 Certificate Modes</h2>
+        <h3>MTC-Spec (Primary)</h3>
+        <p style="font-size:.8rem;color:var(--muted);line-height:1.5;margin-bottom:.6rem">
+          <code style="color:var(--accent);font-family:'JetBrains Mono',monospace">signatureAlgorithm = id-alg-mtcProof</code><br>
+          The signatureValue field carries a binary MTCProof — not a traditional signature. Supports signatureless (landmark) and signed (Ed25519 / ML-DSA post-quantum) verification modes.
+        </p>
+        <h3>Legacy Embedded (Compatibility)</h3>
+        <p style="font-size:.8rem;color:var(--muted);line-height:1.5">
+          Standard X.509 cert with the MTC inclusion proof embedded as a non-critical extension at OID <code style="color:var(--teal);font-family:'JetBrains Mono',monospace">1.3.6.1.4.1.99999.1.1</code>. Backward-compatible with X.509 parsers.
+        </p>
+      </div>
+
+      <!-- Run Demo -->
+      <div class="card gold-top">
+        <h2>⚡ Run Demo</h2>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:.75rem;line-height:1.5">Generate a certificate end-to-end with no database or network dependencies.</p>
+        <div class="domain-row">
+          <input type="text" id="domainInput" value="demo.example.com" placeholder="domain name" maxlength="80">
+        </div>
+        <div class="mode-select">
+          <div class="mode-btn sel" id="modeMtc" onclick="selectMode('mtc')">🔑 MTC-Spec</div>
+          <div class="mode-btn" id="modeEmb" onclick="selectMode('embedded')">📎 Embedded</div>
+        </div>
+        <button class="btn" id="runDemoBtn" onclick="runDemo()">
+          <span id="demoTxt">Generate Certificate</span>
+          <div class="spinner" id="demoSpin"></div>
+        </button>
+        <button class="btn btn-teal" style="margin-top:.5rem" id="runVerifyBtn" onclick="runVerify()">
+          <span id="verifyTxt">Generate &amp; Verify</span>
+          <div class="spinner" id="verifySpin"></div>
+        </button>
+      </div>
+
+      <!-- Status -->
+      <div class="card" id="statusCard" style="display:none">
+        <h2>📊 Last Run</h2>
+        <div class="row"><span class="lbl">Mode</span><span class="val val-a" id="statMode">—</span></div>
+        <div class="row"><span class="lbl">Domain</span><span class="val" id="statDomain">—</span></div>
+        <div class="row"><span class="lbl">Duration</span><span class="val val-t" id="statDuration">—</span></div>
+        <div class="row"><span class="lbl">Result</span><span class="val" id="statResult">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="tab-bar">
+      <button class="tab active" id="tabSteps" onclick="showTab('steps')">🪜 Steps</button>
+      <button class="tab" id="tabOutput" onclick="showTab('output')">📟 Raw Output</button>
+      <button class="tab teal" id="tabSpec" onclick="showTab('spec')">📋 Spec Explorer</button>
+    </div>
+
+    <!-- Steps tab -->
+    <div class="tab-content active" id="tabSteps-panel">
+      <div class="step-list" id="stepList">
+        <div style="color:var(--muted);font-size:.85rem;padding:1rem;text-align:center;opacity:.6">
+          Run a demo to see execution steps here.
+        </div>
+      </div>
+    </div>
+
+    <!-- Raw Output tab -->
+    <div class="tab-content" id="tabOutput-panel" style="padding:1rem;flex-direction:column">
+      <div class="terminal" id="rawOutput" style="border-left:3px solid var(--teal)">Run a demo to see output here.</div>
+    </div>
+
+    <!-- Spec Explorer tab -->
+    <div class="tab-content" id="tabSpec-panel">
+      <div class="spec-wrap" id="specContent">
+        <div style="color:var(--muted);font-size:.85rem;text-align:center;padding:1rem;opacity:.6">Loading spec info…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedMode = 'mtc';
+let specLoaded = false;
+
+function selectMode(m) {
+  selectedMode = m;
+  document.getElementById('modeMtc').classList.toggle('sel', m === 'mtc');
+  document.getElementById('modeEmb').classList.toggle('sel', m === 'embedded');
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-bar .tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1) + '-panel').classList.add('active');
+  document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  if (name === 'spec' && !specLoaded) loadSpec();
+}
+
+function setLoading(btnTxtId, spinId, loading) {
+  document.getElementById(btnTxtId).style.display = loading ? 'none' : 'inline';
+  document.getElementById(spinId).style.display = loading ? 'block' : 'none';
+  document.getElementById('runDemoBtn').disabled = loading;
+  document.getElementById('runVerifyBtn').disabled = loading;
+}
+
+function updateStatus(data, domain) {
+  const card = document.getElementById('statusCard');
+  card.style.display = 'block';
+  card.classList.add('anim');
+  document.getElementById('statMode').textContent = data.mode || selectedMode;
+  document.getElementById('statDomain').textContent = domain;
+  document.getElementById('statDuration').textContent = (data.duration_ms || '?') + ' ms';
+  const res = document.getElementById('statResult');
+  if (data.success) {
+    res.textContent = '✅ Success';
+    res.style.color = 'var(--success)';
+  } else {
+    res.textContent = '❌ Failed';
+    res.style.color = 'var(--danger)';
+  }
+}
+
+function renderSteps(steps, fullOutput) {
+  const list = document.getElementById('stepList');
+  list.innerHTML = '';
+  if (!steps || steps.length === 0) {
+    const d = document.createElement('div');
+    d.style.cssText = 'color:var(--muted);font-size:.85rem;padding:1rem';
+    d.textContent = fullOutput || 'No steps to display.';
+    list.appendChild(d);
+    return;
+  }
+  steps.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'step anim ' + (s.pass ? 'pass' : 'fail');
+    const num = document.createElement('div');
+    num.className = 'step-num';
+    num.textContent = s.step;
+    const body = document.createElement('div');
+    body.className = 'step-body';
+    const lbl = document.createElement('div');
+    lbl.className = 'step-lbl';
+    lbl.textContent = s.label;
+    const det = document.createElement('div');
+    det.className = 'step-detail';
+    det.textContent = s.detail || '';
+    body.appendChild(lbl);
+    body.appendChild(det);
+    const icon = document.createElement('div');
+    icon.className = 'step-icon';
+    icon.textContent = s.pass ? '✅' : '❌';
+    div.appendChild(num);
+    div.appendChild(body);
+    div.appendChild(icon);
+    div.onclick = () => div.classList.toggle('open');
+    list.appendChild(div);
+  });
+}
+
+async function runDemo() {
+  const domain = document.getElementById('domainInput').value.trim() || 'demo.example.com';
+  setLoading('demoTxt', 'demoSpin', true);
+  showTab('steps');
+  try {
+    const r = await fetch('/api/demo?mode=' + selectedMode + '&domain=' + encodeURIComponent(domain));
+    const d = await r.json();
+    renderSteps(d.steps, d.output);
+    document.getElementById('rawOutput').textContent = d.output || '(no output)';
+    document.getElementById('rawOutput').style.color = d.success ? '#a3be8c' : '#bf616a';
+    updateStatus(d, domain);
+  } catch(e) {
+    document.getElementById('stepList').innerHTML = '<div style="color:var(--danger);padding:1rem">❌ Network error — backend unreachable.</div>';
+  }
+  setLoading('demoTxt', 'demoSpin', false);
+}
+
+async function runVerify() {
+  const domain = document.getElementById('domainInput').value.trim() || 'demo.example.com';
+  setLoading('verifyTxt', 'verifySpin', true);
+  showTab('steps');
+  try {
+    const r = await fetch('/api/verify?cert_mode=' + selectedMode + '&domain=' + encodeURIComponent(domain));
+    const d = await r.json();
+    renderSteps(d.steps, d.output);
+    document.getElementById('rawOutput').textContent = d.output || '(no output)';
+    document.getElementById('rawOutput').style.color = d.success ? '#a3be8c' : '#bf616a';
+    const modeLabel = selectedMode === 'mtc' ? 'MTC-Spec (id-alg-mtcProof)' : 'Legacy Embedded Proof';
+    updateStatus({...d, mode: modeLabel}, domain);
+  } catch(e) {
+    document.getElementById('stepList').innerHTML = '<div style="color:var(--danger);padding:1rem">❌ Network error — backend unreachable.</div>';
+  }
+  setLoading('verifyTxt', 'verifySpin', false);
+}
+
+async function loadSpec() {
+  specLoaded = true;
+  try {
+    const r = await fetch('/api/conformance-info');
+    const d = await r.json();
+    const el = document.getElementById('specContent');
+    el.innerHTML = '';
+
+    function section(title, content) {
+      const s = document.createElement('div');
+      s.className = 'spec-section';
+      const h = document.createElement('h3');
+      h.textContent = title;
+      s.appendChild(h);
+      s.appendChild(content);
+      el.appendChild(s);
+    }
+
+    // Spec
+    const specRow = document.createElement('div');
+    specRow.className = 'info-grid';
+    [['Specification', d.spec], ['Primary OID', d.oid_id_alg_mtcProof]].forEach(([k,v]) => {
+      const c = document.createElement('div');
+      c.className = 'info-chip';
+      const n = document.createElement('div'); n.className = 'chip-name'; n.textContent = k;
+      const vv = document.createElement('div'); vv.className = 'chip-val'; vv.textContent = v;
+      c.appendChild(n); c.appendChild(vv);
+      specRow.appendChild(c);
+    });
+    section('📋 Specification', specRow);
+
+    // Modes
+    const modesEl = document.createElement('div');
+    (d.modes || []).forEach(m => {
+      const row = document.createElement('div');
+      row.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:.75rem;margin-bottom:.5rem';
+      const title = document.createElement('div');
+      title.style.cssText = 'font-weight:600;font-size:.85rem;margin-bottom:.3rem;color:var(--text)';
+      title.textContent = m.name;
+      const desc = document.createElement('div');
+      desc.style.cssText = 'font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:.35rem';
+      desc.textContent = m.description;
+      const ver = document.createElement('div');
+      ver.style.cssText = 'font-size:.75rem;color:var(--teal)';
+      ver.textContent = '✓ ' + m.verification;
+      row.appendChild(title); row.appendChild(desc); row.appendChild(ver);
+      modesEl.appendChild(row);
+    });
+    section('🎭 Certificate Modes', modesEl);
+
+    // Algorithms
+    const algEl = document.createElement('div');
+    (d.algorithms || []).forEach(a => {
+      const t = document.createElement('span');
+      t.className = 'spec-tag teal';
+      t.textContent = a;
+      algEl.appendChild(t);
+    });
+    section('🔐 Algorithms', algEl);
+
+    // Tree construction
+    const treeEl = document.createElement('div');
+    [['Leaf hash', d.tree_construction?.leaf_hash], ['Node hash', d.tree_construction?.node_hash]].forEach(([k,v]) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--border);align-items:center';
+      const lbl = document.createElement('span'); lbl.style.cssText = 'font-size:.8rem;color:var(--muted)'; lbl.textContent = k;
+      const val = document.createElement('code'); val.style.cssText = 'font-family:JetBrains Mono,monospace;font-size:.72rem;color:var(--success)'; val.textContent = v;
+      row.appendChild(lbl); row.appendChild(val);
+      treeEl.appendChild(row);
+    });
+    section('🌳 Tree Construction', treeEl);
+
+    // Protocols
+    const protoEl = document.createElement('div');
+    [d.tlog_protocol, d.acme_support].filter(Boolean).forEach(p => {
+      const t = document.createElement('span');
+      t.className = 'spec-tag gold';
+      t.textContent = p;
+      protoEl.appendChild(t);
+    });
+    section('🌐 Protocols', protoEl);
+
+  } catch(e) {
+    document.getElementById('specContent').innerHTML = '<div style="color:var(--danger);padding:1rem">Failed to load spec info.</div>';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  // Check health
+  try {
+    const r = await fetch('/api/health');
+    const d = await r.json();
+    if (!d.playground_ok) {
+      console.warn('Playground binaries not found at', d.bin_path);
+    }
+  } catch(e) {}
+});
+</script>
+</body>
+</html>

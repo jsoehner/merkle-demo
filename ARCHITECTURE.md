@@ -34,6 +34,14 @@ To ensure the demo runs securely and consistently without manual dependencies, t
 * **Build Stage:** Utilizes `cgr.dev/chainguard/wolfi-base` to compile the Go backend, the `mtc-cli`, and invoke the PKI generation script natively during the container build.
 * **Runtime Stage:** Employs the zero-CVE `cgr.dev/chainguard/static` distroless image to host only the statically compiled binaries and cryptographic artifacts, completely removing the attack surface of a traditional OS environment.
 * **Multi-Arch CI:** A GitHub Actions workflow securely builds this container natively for both `amd64` and `arm64` using QEMU emulation and Docker Buildx.
+* **Playground Dashboard:** A second service running on port `8444` that wraps the `ca-extension-mtc-playground` standalone tools, providing an interactive environment for certificate generation and verification.
+
+## Two-Dashboard Experience
+
+The container hosts two distinct web applications:
+
+1.  **Main MTC Demo (`:8443`):** Focused on the full end-to-end TLS 1.3 workflow with a persistent Landmark CA and live validity window monitoring.
+2.  **MTC Playground (`:8444`):** Focused on interactive "on-demand" generation of various MTC formats (Spec-compliant vs. Embedded) for experimentation.
 
 ## How to Run the Demo
 
