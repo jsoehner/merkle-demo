@@ -4,6 +4,7 @@ set -e
 echo "🔄 Generating fresh MTC artifacts on startup..."
 cd /app/demo
 ./setup.sh
+echo "✅ Setup complete. MTC artifacts generated successfully."
 
 echo ""
 echo "🎮 Launching MTC Playground server on https://localhost:8444..."

@@ -39,7 +39,7 @@ RUN cd playground && \
 # ==========================================
 FROM cgr.dev/chainguard/wolfi-base
 
-RUN apk add --no-cache bash openssl
+RUN apk add --no-cache bash openssl bc
 
 # MTC demo website workdir
 WORKDIR /app/demo
@@ -65,6 +65,7 @@ COPY --from=builder /tmp/mtc-interop        /usr/local/bin/mtc-interop
 # ── Entrypoint
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh /app/demo/setup.sh \
+             /app/mtc-cli \
              /app/demo/website-server \
              /app/playground/playground-server \
              /usr/local/bin/demo-embedded-cert \
