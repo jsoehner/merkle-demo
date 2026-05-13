@@ -47,7 +47,7 @@ docker run -p 8443:8443 -p 8444:8444 mtc-demo:latest
 
 Then simply open your browser to either experience:
 * **MTC Demo Website (HTTPS):** `https://localhost:8443`
-* **DigiCert MTC Playground (HTTP):** `http://localhost:8444`
+* **DigiCert MTC Playground (HTTPS):** `https://localhost:8444`
 
 ## DigiCert MTC Playground
 

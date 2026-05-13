@@ -41,7 +41,7 @@ To ensure the demo runs securely and consistently without manual dependencies, t
 The container hosts two distinct web applications:
 
 1.  **Main MTC Demo (`:8443`):** Focused on the full end-to-end TLS 1.3 workflow with a persistent Landmark CA and live validity window monitoring.
-2.  **MTC Playground (`:8444`):** Focused on interactive "on-demand" generation of various MTC formats (Spec-compliant vs. Embedded) for experimentation.
+2.  **MTC Playground (`:8444`):** Focused on interactive "on-demand" generation of various MTC formats (Spec-compliant vs. Embedded) for experimentation. Served over TLS 1.3.
 
 ## How to Run the Demo
 

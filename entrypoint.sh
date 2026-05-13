@@ -6,7 +6,7 @@ cd /app/demo
 ./setup.sh
 
 echo ""
-echo "🎮 Launching MTC Playground server on :8444..."
+echo "🎮 Launching MTC Playground server on https://localhost:8444..."
 cd /app/playground
 PLAYGROUND_BIN_DIR=/usr/local/bin ./playground-server &
 

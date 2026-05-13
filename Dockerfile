@@ -67,6 +67,8 @@ COPY --from=builder /tmp/mtc-interop        /usr/local/bin/mtc-interop
 # ── Entrypoint
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh /app/demo/setup.sh \
+             /app/demo/website-server \
+             /app/playground/playground-server \
              /usr/local/bin/demo-embedded-cert \
              /usr/local/bin/mtc-verify-cert \
              /usr/local/bin/mtc-conformance \

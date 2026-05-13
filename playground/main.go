@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -340,7 +341,30 @@ func main() {
 	mux.HandleFunc("/api/verify", verifyHandler)
 	mux.HandleFunc("/api/conformance-info", conformanceInfoHandler)
 
+	// Configure TLS 1.3
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS13,
+		MaxVersion: tls.VersionTLS13,
+	}
+
 	addr := ":8444"
-	fmt.Println("🎮 MTC Playground Dashboard running at http://localhost" + addr)
-	log.Fatal(http.ListenAndServe(addr, mux))
+	server := &http.Server{
+		Addr:      addr,
+		Handler:   mux,
+		TLSConfig: tlsConfig,
+	}
+
+	fmt.Println("🎮 MTC Playground Dashboard running at https://localhost" + addr)
+	// We expect certificates to be in the demo directory (../demo/website.pem, etc.)
+	// or provided in the current directory.
+	certFile := "website.pem"
+	keyFile := "website.key"
+
+	// Fallback to demo directory if not in current
+	if _, err := os.Stat(certFile); os.IsNotExist(err) {
+		certFile = "../demo/website.pem"
+		keyFile = "../demo/website.key"
+	}
+
+	log.Fatal(server.ListenAndServeTLS(certFile, keyFile))
 }
