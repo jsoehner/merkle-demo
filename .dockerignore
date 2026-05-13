@@ -1,6 +1,8 @@
 # Cloned repos (fetched via git clone inside Dockerfile)
 mtc/
 ca-extension-mtc-playground/
+mtc-cli
+bin/
 
 # Generated MTC and TLS artifacts
 demo/ca/

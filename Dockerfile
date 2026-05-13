@@ -8,18 +8,23 @@ RUN apk add --no-cache go bash openssl build-base git
 
 WORKDIR /app
 
-# ── 1. Clone the upstream MTC library (gitignored)
-RUN git clone --depth=1 https://github.com/bwesterb/mtc.git mtc
+# ── 1. Clone and build the upstream MTC library (bwesterb/mtc)
+RUN git clone --depth=1 https://github.com/bwesterb/mtc.git mtc && \
+    cd mtc && \
+    go mod download && \
+    CGO_ENABLED=0 go build -v -o /app/mtc-cli ./cmd/mtc
 
-# ── 2. Clone the DigiCert ca-extension-mtc-playground
-RUN git clone --depth=1 https://github.com/digicert/ca-extension-mtc-playground.git ca-extension-mtc-playground
+# ── 2. Clone and build DigiCert playground standalone tools
+RUN git clone --depth=1 https://github.com/digicert/ca-extension-mtc-playground.git ca-extension-mtc-playground && \
+    cd ca-extension-mtc-playground && \
+    go mod download && \
+    CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/demo-embedded-cert ./cmd/demo-embedded-cert/ && \
+    CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/mtc-verify-cert    ./cmd/mtc-verify-cert/ && \
+    CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/mtc-conformance    ./cmd/mtc-conformance/ && \
+    CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/mtc-interop        ./cmd/mtc-interop/
 
-# Copy the rest of the project
+# ── 3. Copy the rest of the project
 COPY . .
-
-# ── 3. Build mtc-cli (bwesterb/mtc)
-RUN cd mtc && \
-    CGO_ENABLED=0 go build -o ../mtc-cli ./cmd/mtc
 
 # ── 4. Build the MTC demo website server
 RUN cd demo && \
@@ -28,13 +33,6 @@ RUN cd demo && \
 # ── 5. Build the playground server
 RUN cd playground && \
     CGO_ENABLED=0 go build -o playground-server main.go
-
-# ── 6. Build DigiCert playground standalone tools (no DB/network needed)
-RUN cd ca-extension-mtc-playground && \
-    CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/demo-embedded-cert ./cmd/demo-embedded-cert/ && \
-    CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/mtc-verify-cert    ./cmd/mtc-verify-cert/ && \
-    CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/mtc-conformance    ./cmd/mtc-conformance/ && \
-    CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/mtc-interop        ./cmd/mtc-interop/
 
 # ==========================================
 # Runtime Stage
