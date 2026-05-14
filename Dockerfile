@@ -38,7 +38,7 @@ RUN cd playground && \
 # Common Runtime Base
 # ==========================================
 FROM cgr.dev/chainguard/wolfi-base AS runtime-base
-RUN apk add --no-cache bash openssl bc
+RUN apk add --no-cache bash openssl bc curl
 WORKDIR /app
 
 # ==========================================
