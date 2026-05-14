@@ -1,0 +1,37 @@
+services:
+  demo:
+    build:
+      context: .
+      target: demo-runtime
+    container_name: mtc-demo-website
+    ports:
+      - "8443:8443"
+    volumes:
+      - shared-artifacts:/app/demo
+    healthcheck:
+      # Simple bash check to see if the port is listening
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/127.0.0.1/8443"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  playground:
+    build:
+      context: .
+      target: playground-runtime
+    container_name: mtc-playground
+    ports:
+      - "8444:8444"
+    volumes:
+      - shared-artifacts:/app/demo:ro
+    environment:
+      - PLAYGROUND_BIN_DIR=/usr/local/bin
+    depends_on:
+      demo:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  shared-artifacts:

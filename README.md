@@ -33,21 +33,25 @@ The result? The internet gets quantum-level security without sacrificing the spe
 
 ![Payload Diagnostics & Decoded Views](./demo/screenshots/diagnostics.png)
 
-## Running with Docker (Recommended)
+## Running with Docker Compose (Recommended)
 
-You can build and run this entire demonstration securely inside a hardened Chainguard container without manually compiling the Go binaries on your host machine.
+The easiest way to run the entire demonstration is using **Docker Compose**, which orchestrates two separate containers:
+1. **`mtc-demo-website`**: The main MTC demonstration UI (Port 8443).
+2. **`mtc-playground`**: The interactive DigiCert MTC Playground dashboard (Port 8444).
 
 ```bash
-# Build the multi-arch image locally
-docker build -t mtc-demo:latest .
-
-# Run the container mapping both dashboard ports
-docker run -p 8443:8443 -p 8444:8444 mtc-demo:latest
+# Build and start both services
+docker compose up --build -d
 ```
 
-Then simply open your browser to either experience:
+Once the containers are healthy, open your browser to:
 * **MTC Demo Website (HTTPS):** `https://localhost:8443`
 * **DigiCert MTC Playground (HTTPS):** `https://localhost:8444`
+
+To view logs:
+```bash
+docker compose logs -f
+```
 
 ## DigiCert MTC Playground
 
@@ -97,13 +101,16 @@ Once loaded, click **"Verify Merkle Tree Certificate"** to perform a live inclus
 
 ```text
 /
-├── Dockerfile           # Secure multi-stage Chainguard container
+├── docker-compose.yml   # Multi-container orchestration
+├── Dockerfile           # Secure multi-stage build with multiple runtime targets
 ├── .github/workflows/   # Multi-arch CI pipeline via QEMU/Buildx
-└── demo/
-    ├── setup.sh             # Automates CA creation and certificate issuance
-    ├── main.go              # The Go TLS 1.3 Web Server and verification API
-    ├── static/              # The premium frontend UI
-    └── screenshots/         # Screenshots for documentation
+├── demo/                # Main MTC Demonstration
+│   ├── setup.sh         # Automates CA creation and certificate issuance
+│   ├── main.go          # The Go TLS 1.3 Web Server and verification API
+│   └── static/          # Premium frontend UI
+└── playground/          # DigiCert MTC Playground
+    ├── main.go          # Playground API wrapper
+    └── static/          # Playground dashboard UI
 ```
 
 ## Behind the Scenes (How Verification Works)

@@ -35,24 +35,36 @@ RUN cd playground && \
     CGO_ENABLED=0 go build -o playground-server main.go
 
 # ==========================================
-# Runtime Stage
+# Common Runtime Base
 # ==========================================
-FROM cgr.dev/chainguard/wolfi-base
-
+FROM cgr.dev/chainguard/wolfi-base AS runtime-base
 RUN apk add --no-cache bash openssl bc
+WORKDIR /app
 
-# MTC demo website workdir
+# ==========================================
+# Demo Runtime Stage
+# ==========================================
+FROM runtime-base AS demo-runtime
+
 WORKDIR /app/demo
-
-# ── Core binaries
 COPY --from=builder /app/mtc-cli        /app/mtc-cli
 COPY --from=builder /app/demo/website-server /app/demo/website-server
-
-# ── Demo website setup scripts + static assets
 COPY --from=builder /app/demo/setup.sh  /app/demo/setup.sh
 COPY --from=builder /app/demo/static    /app/demo/static
 
-# ── Playground server + static assets
+RUN chmod +x /app/mtc-cli /app/demo/website-server /app/demo/setup.sh
+
+EXPOSE 8443
+
+# Entrypoint for demo: run setup then start server
+CMD ["/bin/bash", "-c", "./setup.sh && ./website-server"]
+
+# ==========================================
+# Playground Runtime Stage
+# ==========================================
+FROM runtime-base AS playground-runtime
+
+WORKDIR /app/playground
 COPY --from=builder /app/playground/playground-server /app/playground/playground-server
 COPY --from=builder /app/playground/static            /app/playground/static
 
@@ -62,22 +74,14 @@ COPY --from=builder /tmp/mtc-verify-cert    /usr/local/bin/mtc-verify-cert
 COPY --from=builder /tmp/mtc-conformance    /usr/local/bin/mtc-conformance
 COPY --from=builder /tmp/mtc-interop        /usr/local/bin/mtc-interop
 
-# ── Entrypoint
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh /app/demo/setup.sh \
-             /app/mtc-cli \
-             /app/demo/website-server \
-             /app/playground/playground-server \
+RUN chmod +x /app/playground/playground-server \
              /usr/local/bin/demo-embedded-cert \
              /usr/local/bin/mtc-verify-cert \
              /usr/local/bin/mtc-conformance \
              /usr/local/bin/mtc-interop
 
-# Expose MTC Demo (HTTPS) + Playground (HTTP)
-EXPOSE 8443 8444
+EXPOSE 8444
 
-# Health check — playground starts last, so if it's up both servers are ready
-HEALTHCHECK --interval=5s --timeout=3s --start-period=45s --retries=3 \
-  CMD bash -c 'echo > /dev/tcp/localhost/8444' || exit 1
+ENV PLAYGROUND_BIN_DIR=/usr/local/bin
+CMD ["./playground-server"]
 
-ENTRYPOINT ["/app/entrypoint.sh"]
