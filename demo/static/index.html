@@ -145,6 +145,25 @@
         .diag-wrap{display:flex;flex-direction:column;flex:1;padding:1rem;overflow:hidden}
         .diag-tabs{display:flex;gap:.3rem;flex-shrink:0;margin-bottom:.75rem;flex-wrap:wrap}
         .diag-terminal{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+        /* COMPARE PANEL */
+        .compare-wrap{display:flex;gap:1.5rem;padding:1.5rem;flex:1;overflow-y:auto}
+        .compare-card{flex:1;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+        .compare-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+        .compare-card.trad::before{background:var(--danger)}
+        .compare-card.mtc::before{background:var(--success)}
+        .compare-header{padding:1.2rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)}
+        .compare-header h4{font-size:1.1rem;margin-bottom:0.2rem}
+        .compare-header p{font-size:0.75rem;color:var(--muted)}
+        .compare-body{padding:1.2rem;flex:1}
+        .cert-visual{background:#0b0f1a;border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:'JetBrains Mono',monospace;font-size:0.7rem;margin-bottom:1rem;line-height:1.4}
+        .cert-field{margin-bottom:0.8rem}
+        .cert-label{color:var(--muted);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:0.2rem}
+        .cert-val{color:var(--text);word-break:break-all}
+        .cert-sig{color:var(--danger);font-style:italic}
+        .cert-proof{color:var(--success);font-weight:600}
+        .compare-footer{padding:1rem;background:rgba(255,255,255,0.01);border-top:1px solid var(--border);font-size:0.78rem;color:var(--muted)}
+        .highlight-box{background:rgba(79,70,229,0.1);border-left:3px solid var(--primary);padding:0.8rem;border-radius:0 6px 6px 0;margin-top:0.5rem}
     </style>
 </head>
 <body>
@@ -207,6 +226,7 @@
     <div class="right-panel">
         <div class="tab-bar">
             <button class="tab active" id="tabProof" onclick="showTab('proof')">🌳 Merkle Proof Chain</button>
+            <button class="tab" id="tabCompare" onclick="showTab('compare')">⚖️ Cert Comparison</button>
             <button class="tab" id="tabDiag" onclick="showTab('diag')">🔬 Payload Decoder</button>
         </div>
 
@@ -243,6 +263,98 @@
                     <button class="btn-ghost btn" onclick="collapseAllSteps()">Collapse All</button>
                 </div>
                 <div class="step-list" id="stepList"></div>
+            </div>
+        </div>
+
+        <!-- Comparison Tab -->
+        <div class="tab-content" id="tabCompare-panel">
+            <div style="padding:1.5rem 1.5rem 0 1.5rem; text-align:center">
+                <img src="comparison.png" alt="X.509 vs MTC" style="max-width:100%; border-radius:12px; border:1px solid var(--border); box-shadow:0 10px 30px rgba(0,0,0,0.5)">
+            </div>
+            <div class="compare-wrap">
+                <!-- Traditional X.509 -->
+                <div class="compare-card trad">
+                    <div class="compare-header">
+                        <h4>Traditional X.509</h4>
+                        <p>Public Key Infrastructure (Standard)</p>
+                    </div>
+                    <div class="compare-body">
+                        <div class="cert-visual">
+                            <div class="cert-field">
+                                <span class="cert-label">Format</span>
+                                <span class="cert-val">ASN.1 DER / PEM</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Subject</span>
+                                <span class="cert-val">CN=localhost, O=Demo</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Public Key</span>
+                                <span class="cert-val">P-256 (64 bytes)</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Signature Alg</span>
+                                <span class="cert-val">ECDSA-with-SHA256</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Digital Signature</span>
+                                <span class="cert-val cert-sig">0x4F3A...B2E1 (72 bytes)</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Verification</span>
+                                <span class="cert-val">Cryptographic Math (CPU Heavy)</span>
+                            </div>
+                        </div>
+                        <div class="highlight-box">
+                            <strong>Bottleneck:</strong> Every certificate must be individually signed and individually verified using complex asymmetric math.
+                        </div>
+                    </div>
+                    <div class="compare-footer">
+                        Size: ~1.5 KB - 4 KB
+                    </div>
+                </div>
+
+                <!-- MTC -->
+                <div class="compare-card mtc">
+                    <div class="compare-header">
+                        <h4>Merkle Tree Cert (MTC)</h4>
+                        <p>Post-Quantum Ready (Next-Gen)</p>
+                    </div>
+                    <div class="compare-body">
+                        <div class="cert-visual">
+                            <div class="cert-field">
+                                <span class="cert-label">Format</span>
+                                <span class="cert-val">Flat Binary / CBOR</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Subject</span>
+                                <span class="cert-val">CN=localhost, O=Demo</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Public Key</span>
+                                <span class="cert-val">P-256 (64 bytes)</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Auth Method</span>
+                                <span class="cert-val">Merkle Inclusion Proof</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Proof Path</span>
+                                <span class="cert-val cert-proof">12 Hashes (384 bytes)</span>
+                            </div>
+                            <div class="cert-field">
+                                <span class="cert-label">Verification</span>
+                                <span class="cert-val">Simple Hashing (SHA-256)</span>
+                            </div>
+                        </div>
+                        <div class="highlight-box" style="border-left-color:var(--success); background:rgba(16,185,129,0.1)">
+                            <strong>Advantage:</strong> One signature (the VW) covers millions of certs. Verification is just a sequence of fast hashes.
+                        </div>
+                    </div>
+                    <div class="compare-footer">
+                        Size: ~400 B - 600 B (Leaf)
+                    </div>
+                </div>
             </div>
         </div>
 
