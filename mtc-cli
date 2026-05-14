@@ -11,8 +11,11 @@ elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
     ARCH="arm64"
 fi
 
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Construct the binary name
-BINARY="bin/mtc-cli-${OS}-${ARCH}"
+BINARY="${SCRIPT_DIR}/bin/mtc-cli-${OS}-${ARCH}"
 
 # Check if the binary exists
 if [ -f "$BINARY" ]; then

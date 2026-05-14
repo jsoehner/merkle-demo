@@ -14,6 +14,21 @@ import (
 	"time"
 )
 
+// LogFilter is an io.Writer that suppresses common non-critical TLS handshake errors.
+type LogFilter struct{}
+
+func (f *LogFilter) Write(p []byte) (n int, err error) {
+	s := string(p)
+	if strings.Contains(s, "TLS handshake error") && (strings.Contains(s, "EOF") ||
+		strings.Contains(s, "unknown certificate") ||
+		strings.Contains(s, "unsupported versions") ||
+		strings.Contains(s, "broken pipe") ||
+		strings.Contains(s, "connection reset by peer")) {
+		return len(p), nil
+	}
+	return os.Stderr.Write(p)
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Response types
 // ────────────────────────────────────────────────────────────────────────────
@@ -352,6 +367,7 @@ func main() {
 		Addr:      addr,
 		Handler:   mux,
 		TLSConfig: tlsConfig,
+		ErrorLog:  log.New(&LogFilter{}, "", 0),
 	}
 
 	fmt.Println("🎮 MTC Playground Dashboard running at https://localhost" + addr)

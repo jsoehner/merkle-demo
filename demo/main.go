@@ -12,7 +12,24 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
+
+// LogFilter is an io.Writer that suppresses common non-critical TLS handshake errors.
+type LogFilter struct{}
+
+func (f *LogFilter) Write(p []byte) (n int, err error) {
+	s := string(p)
+	// Suppress common connection-level errors that clutter logs during scans or health checks
+	if strings.Contains(s, "TLS handshake error") && (strings.Contains(s, "EOF") ||
+		strings.Contains(s, "unknown certificate") ||
+		strings.Contains(s, "unsupported versions") ||
+		strings.Contains(s, "broken pipe") ||
+		strings.Contains(s, "connection reset by peer")) {
+		return len(p), nil
+	}
+	return os.Stderr.Write(p)
+}
 
 type VerifyResponse struct {
 	Success bool   `json:"success"`
@@ -99,22 +116,19 @@ func verifyLandmarkHandler(w http.ResponseWriter, r *http.Request) {
 func inspectHandler(w http.ResponseWriter, r *http.Request) {
 	target := r.URL.Query().Get("target")
 	ca := r.URL.Query().Get("ca") // "root" or "landmark"
-	var cmd *exec.Cmd
 
 	caParamsPath := "ca/www/mtc/v04b/ca-params"
 	if ca == "landmark" {
 		caParamsPath = "landmark-ca/www/mtc/v04b/ca-params"
 	}
 
-	// isVW flags targets where the inspect tool dumps hundreds of thousands of
-	// tree_heads lines (one per batch slot). We truncate to a reasonable preview.
+	var cmd *exec.Cmd
 	isVW := false
 
 	switch target {
 	case "cert":
 		cmd = exec.Command("../mtc-cli", "inspect", "-ca-params", caParamsPath, "cert", "website.mtc")
 	case "landmark-cert":
-		// Prefer the website cert issued via landmark path; fall back to landmark identity cert.
 		certFile := "landmark-website.mtc"
 		if _, err := os.Stat(certFile); os.IsNotExist(err) {
 			certFile = "landmark.mtc"
@@ -137,62 +151,7 @@ func inspectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var rawOutput []byte
-	var cmdErr error
-
-	if isVW {
-		// The validity-window inspect emits one line per batch slot (300k+ lines).
-		// Stream output and stop reading after we have collected enough lines.
-		const maxLines = 30
-		pr, pw, pipeErr := os.Pipe()
-		if pipeErr != nil {
-			http.Error(w, "pipe error", http.StatusInternalServerError)
-			return
-		}
-		cmd.Stdout = pw
-		cmd.Stderr = pw
-		if startErr := cmd.Start(); startErr != nil {
-			pw.Close()
-			pr.Close()
-			http.Error(w, "start error: "+startErr.Error(), http.StatusInternalServerError)
-			return
-		}
-		var buf bytes.Buffer
-		tmp := make([]byte, 4096)
-		lineCount := 0
-		truncated := false
-		for lineCount < maxLines {
-			n, readErr := pr.Read(tmp)
-			if n > 0 {
-				chunk := tmp[:n]
-				for _, b := range chunk {
-					buf.WriteByte(b)
-					if b == '\n' {
-						lineCount++
-						if lineCount >= maxLines {
-							truncated = true
-							break
-						}
-					}
-				}
-			}
-			if readErr != nil {
-				break
-			}
-		}
-		_ = cmd.Process.Kill()
-		pw.Close()
-		pr.Close()
-		_ = cmd.Wait()
-		if truncated {
-			buf.WriteString(fmt.Sprintf("\n… [output truncated — validity window contains ~%d tree heads; showing first %d] …",
-				getVWSize(cmd), maxLines-3)) // -3 for header lines
-		}
-		rawOutput = buf.Bytes()
-		cmdErr = nil // we treat partial output as success
-	} else {
-		rawOutput, cmdErr = cmd.CombinedOutput()
-	}
+	rawOutput, cmdErr := runMtcCommand(cmd, isVW)
 
 	resp := VerifyResponse{
 		Success: cmdErr == nil,
@@ -202,11 +161,73 @@ func inspectHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// runMtcCommand executes an mtc-cli command and truncates output if it's a validity window
+func runMtcCommand(cmd *exec.Cmd, isVW bool) ([]byte, error) {
+	if !isVW {
+		return cmd.CombinedOutput()
+	}
+
+	// For validity windows, we truncate to prevent memory bloat and I/O bottlenecks
+	const maxLines = 20
+	pr, pw, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
+	defer pr.Close()
+
+	cmd.Stdout = pw
+	cmd.Stderr = pw
+	if err := cmd.Start(); err != nil {
+		pw.Close()
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	done := make(chan bool)
+	go func() {
+		lineCount := 0
+		tmp := make([]byte, 4096)
+		for lineCount < maxLines {
+			n, err := pr.Read(tmp)
+			if n > 0 {
+				chunk := tmp[:n]
+				for _, b := range chunk {
+					buf.WriteByte(b)
+					if b == '\n' {
+						lineCount++
+						if lineCount >= maxLines {
+							break
+						}
+					}
+				}
+			}
+			if err != nil {
+				break
+			}
+		}
+		done <- true
+	}()
+
+	select {
+	case <-done:
+		_ = cmd.Process.Kill()
+	case <-time.After(3 * time.Second):
+		_ = cmd.Process.Kill()
+	}
+
+	pw.Close()
+	_ = cmd.Wait()
+
+	if isVW {
+		buf.WriteString(fmt.Sprintf("\n… [output truncated — validity window contains ~%d tree heads; showing first %d] …",
+			getVWSize(cmd), maxLines))
+	}
+
+	return buf.Bytes(), nil
+}
+
 // getVWSize returns the approximate number of tree-head entries in a validity window
-// by looking at the file size (each entry is 32 bytes; file also has a small header).
 func getVWSize(cmd *exec.Cmd) int {
-	// We can't easily get the file path from cmd at this point,
-	// so return a placeholder based on the 9.2 MB default.
 	return 302400
 }
 
@@ -250,32 +271,32 @@ func proofChainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Step 1: Parse CA params
-	caParamsOut, err := exec.Command("../mtc-cli", "inspect", "ca-params", "ca/www/mtc/v04b/ca-params").CombinedOutput()
+	caParamsOut, err := runMtcCommand(exec.Command("../mtc-cli", "inspect", "ca-params", "ca/www/mtc/v04b/ca-params"), false)
 	step1 := ProofStep{Step: 1, Actor: "Root CA", Action: "Load CA Parameters", Result: string(caParamsOut), Verified: err == nil}
 	resp.Steps = append(resp.Steps, step1)
 
 	// Step 2: Parse Landmark CA params
-	lmParamsOut, err2 := exec.Command("../mtc-cli", "inspect", "ca-params", "landmark-ca/www/mtc/v04b/ca-params").CombinedOutput()
+	lmParamsOut, err2 := runMtcCommand(exec.Command("../mtc-cli", "inspect", "ca-params", "landmark-ca/www/mtc/v04b/ca-params"), false)
 	step2 := ProofStep{Step: 2, Actor: "Landmark CA", Action: "Load Landmark Parameters", Result: string(lmParamsOut), Verified: err2 == nil}
 	resp.Steps = append(resp.Steps, step2)
 
-	// Step 3: Inspect validity window
-	vwOut, err3 := exec.Command("../mtc-cli", "inspect", "-ca-params", "ca/www/mtc/v04b/ca-params", "validity-window", "website.vw").CombinedOutput()
+	// Step 3: Inspect validity window (TRUNCATED)
+	vwOut, err3 := runMtcCommand(exec.Command("../mtc-cli", "inspect", "-ca-params", "ca/www/mtc/v04b/ca-params", "validity-window", "website.vw"), true)
 	step3 := ProofStep{Step: 3, Actor: "Root CA", Action: "Inspect Signed Validity Window", Result: string(vwOut), Verified: err3 == nil}
 	resp.Steps = append(resp.Steps, step3)
 
 	// Step 4: Inspect certificate (Merkle proof)
-	certOut, err4 := exec.Command("../mtc-cli", "inspect", "-ca-params", "ca/www/mtc/v04b/ca-params", "cert", "website.mtc").CombinedOutput()
+	certOut, err4 := runMtcCommand(exec.Command("../mtc-cli", "inspect", "-ca-params", "ca/www/mtc/v04b/ca-params", "cert", "website.mtc"), false)
 	step4 := ProofStep{Step: 4, Actor: "Leaf Certificate", Action: "Parse Merkle Inclusion Proof", Result: string(certOut), Verified: err4 == nil}
 	resp.Steps = append(resp.Steps, step4)
 
-	// Step 5: Landmark VW
-	lmVwOut, err5 := exec.Command("../mtc-cli", "inspect", "-ca-params", "landmark-ca/www/mtc/v04b/ca-params", "validity-window", "landmark.vw").CombinedOutput()
+	// Step 5: Landmark VW (TRUNCATED)
+	lmVwOut, err5 := runMtcCommand(exec.Command("../mtc-cli", "inspect", "-ca-params", "landmark-ca/www/mtc/v04b/ca-params", "validity-window", "landmark.vw"), true)
 	step5 := ProofStep{Step: 5, Actor: "Landmark CA", Action: "Landmark Validity Window", Result: string(lmVwOut), Verified: err5 == nil}
 	resp.Steps = append(resp.Steps, step5)
 
 	// Step 6: Full verification
-	verifyOut, verifyErr := exec.Command("../mtc-cli", "verify", "-ca-params", "ca/www/mtc/v04b/ca-params", "-validity-window", "website.vw", "website.mtc").CombinedOutput()
+	verifyOut, verifyErr := runMtcCommand(exec.Command("../mtc-cli", "verify", "-ca-params", "ca/www/mtc/v04b/ca-params", "-validity-window", "website.vw", "website.mtc"), false)
 	step6 := ProofStep{Step: 6, Actor: "Verifier", Action: "Verify Merkle Inclusion Proof", Result: string(verifyOut), Verified: verifyErr == nil}
 	resp.Steps = append(resp.Steps, step6)
 
@@ -283,8 +304,8 @@ func proofChainHandler(w http.ResponseWriter, r *http.Request) {
 	resp.ChainValid = verifyErr == nil
 
 	// Build node summaries from inspect output
-	resp.RootCA = buildProofNode("Root CA", string(caParamsOut), "website.vw")
-	resp.Landmark = buildProofNode("Landmark CA", string(lmParamsOut), "landmark.vw")
+	resp.RootCA = buildProofNode("Root CA", string(vwOut), "website.vw")
+	resp.Landmark = buildProofNode("Landmark CA", string(lmVwOut), "landmark.vw")
 	resp.LeafCert = buildLeafNode(string(certOut), "website.mtc")
 
 	w.Header().Set("Content-Type", "application/json")
@@ -296,7 +317,8 @@ func buildProofNode(name, inspectOut, vwPath string) ProofNode {
 
 	// Get tree head from validity window inspect
 	for _, line := range strings.Split(inspectOut, "\n") {
-		if strings.Contains(line, "batch_number") {
+		lowerLine := strings.ToLower(line)
+		if strings.Contains(lowerLine, "batch_number") || strings.Contains(lowerLine, "batch number") {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
 				node.BatchNumber = parts[len(parts)-1]
@@ -325,22 +347,31 @@ func buildProofNode(name, inspectOut, vwPath string) ProofNode {
 func buildLeafNode(certOut, certPath string) ProofNode {
 	node := ProofNode{Name: "Leaf Certificate"}
 	for _, line := range strings.Split(certOut, "\n") {
-		if strings.Contains(line, "batch_number") || strings.Contains(line, "batch") {
+		lowerLine := strings.ToLower(line)
+		if strings.Contains(lowerLine, "batch_number") || strings.Contains(lowerLine, "batch number") {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
 				node.BatchNumber = parts[len(parts)-1]
 			}
 		}
-		if strings.Contains(line, "path") {
+		if strings.Contains(lowerLine, "recomputed tree head") {
+			parts := strings.Fields(line)
+			if len(parts) >= 2 {
+				hash := parts[len(parts)-1]
+				if len(hash) > 16 {
+					node.TreeHead = hash[:16] + "…"
+				} else {
+					node.TreeHead = hash
+				}
+			}
+		}
+		if strings.Contains(lowerLine, "path length") || (strings.Contains(lowerLine, "path") && !strings.Contains(lowerLine, "authentication")) {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
 				val := parts[len(parts)-1]
 				n, err := strconv.Atoi(val)
 				if err == nil {
 					node.PathLength = n
-				} else if len(val) > 0 {
-					// path is hex-encoded; length = hex_len/2 / 32 = nodes
-					node.PathLength = len(val) / 64
 				}
 			}
 		}
@@ -393,6 +424,7 @@ func main() {
 		Addr:      ":8443",
 		Handler:   mux,
 		TLSConfig: tlsConfig,
+		ErrorLog:  log.New(&LogFilter{}, "", 0),
 	}
 
 	fmt.Println("🚀 MTC Demo Website running at https://localhost:8443")

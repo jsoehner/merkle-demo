@@ -8,33 +8,33 @@ Merkle Tree Certificates (MTCs) solve this by using batch signing and **Merkle i
 ## Demonstration Architecture
 In this demonstration, we've built the following components:
 
-### 1. The PKI (Certificate Authority)
-Located in `demo/ca`, the MTC Certificate Authority was created using the `bwesterb/mtc` Go CLI. 
-* It issues batches every 2 seconds with a 1-hour lifetime.
-* It signed an assertion request (subject identity + claim) for `localhost` and `127.0.0.1` using an ECDSA prime256v1 public key.
-* The CA publishes the signed validity window and the Merkle tree containing our assertion.
+### 1. The Multi-CA Infrastructure
+The demo features a dual-CA hierarchy to simulate a real-world Landmark CA cross-verification path:
+* **Root CA:** Located in `demo/ca`, issues the primary batch every 2 seconds.
+* **Landmark CA:** Located in `demo/landmark-ca`, acts as a trusted cross-signer, providing a secondary verification path for the same assertion.
+* Both CAs maintain live **Validity Windows** with ~300k tree heads, simulating a full storage window of historical checkpoints.
 
 ### 2. The Certificate Artifacts
-The CA issued the following specific artifacts for our website:
-* `website.mtc`: The Merkle Tree Certificate containing the assertion and the authentication path (inclusion proof).
-* `website.vw`: The signed validity window, providing the trusted checkpoint of tree heads.
-* `ca-params`: The public parameters of the CA.
+The environment generates several cryptographic artifacts for the `localhost` identity:
+* `website.mtc`: The primary Merkle Tree Certificate.
+* `website.vw`: The Root CA's signed validity window (~9.2 MB).
+* `landmark.vw`: The Landmark CA's signed validity window.
+* `landmark-website.mtc`: A certificate issued specifically through the Landmark CA's path.
 
-### 3. The TLS 1.3 Web Server
-Located in `demo/main.go`, this is a Go backend running on standard TLS 1.3. Because MTC is currently an experimental IETF draft, mainstream browsers do not accept MTC directly in the TLS handshake natively yet. 
-To demonstrate it, our server:
-* Secures the connection over standard TLS 1.3.
-* Exposes an API endpoint (`/api/verify`) that triggers a live verification of our `website.mtc` using the CA's validity window.
-* Exposes a diagnostics API (`/api/inspect`) to parse and visualize the raw binary MTC payloads on the frontend.
-* Exposes the MTC components statically at `/.well-known/mtc/` mimicking how an interoperable system would query them.
-* Serves a premium, glassmorphism-inspired dark mode frontend where you can visually trigger and observe the certificate inclusion proof verification as well as deeply inspect the decoded structures.
+### 3. The TLS 1.3 Web Server & UI
+Located in `demo/main.go`, the server provides the following capabilities:
+* **TLS 1.3 Enforcement:** Secures all demo traffic using modern TLS 1.3.
+* **Proof Chain API:** A specialized endpoint (`/api/proof-chain`) that performs a multi-stage verification across both CAs, returning a structured trace of the cryptographic validation.
+* **Truncated Streaming Inspect:** A performance-optimized diagnostics API that streams large validity window outputs while truncating them for UI performance.
+* **Interactive Explorer:** A premium glassmorphism-inspired UI at `https://localhost:8443` featuring:
+    * **Live Proof Path:** Visualizes the journey from CA parameters to the leaf assertion.
+    * **Multi-Path Verification:** Compare verification against Root vs. Landmark CA paths.
+    * **Payload Decoder:** Real-time parsing of binary MTC structures.
 
 ### 4. Secure Containerization & CI/CD Pipeline
-To ensure the demo runs securely and consistently without manual dependencies, the entire environment is containerized using **Chainguard** hardened images.
-* **Build Stage:** Utilizes `cgr.dev/chainguard/wolfi-base` to compile the Go backend, the `mtc-cli`, and invoke the PKI generation script natively during the container build.
-* **Runtime Stage:** Employs the zero-CVE `cgr.dev/chainguard/static` distroless image to host only the statically compiled binaries and cryptographic artifacts, completely removing the attack surface of a traditional OS environment.
-* **Multi-Arch CI:** A GitHub Actions workflow securely builds this container natively for both `amd64` and `arm64` using QEMU emulation and Docker Buildx.
-* **Playground Dashboard:** A second service running on port `8444` that wraps the `ca-extension-mtc-playground` standalone tools, providing an interactive environment for certificate generation and verification.
+To ensure the demo runs securely and consistently, the environment is containerized using **Chainguard** hardened images.
+* **Distroless Runtime:** Uses `cgr.dev/chainguard/static` to minimize attack surface.
+* **Multi-Arch Native Build:** The `mtc-cli` and Go backend are built natively for the host architecture during the container build stage.
 
 ## Two-Dashboard Experience
 

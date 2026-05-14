@@ -8,59 +8,43 @@
 
 This project provides a fully self-contained, automated demonstration of **Merkle Tree Certificates (MTC)**—an experimental Internet Engineering Task Force (IETF) architectural proposal designed to fix the severe performance bottlenecks caused by massive Post-Quantum Cryptography (PQC) signature sizes in standard TLS handshakes.
 
-![Main UI showing Connection Security](./demo/screenshots/main_ui.png)
+![Main UI Dashboard](./demo/screenshots/01_main_view.png)
 
-## What are Merkle Tree Certificates?
+## Interactive Proof Chain & Landmark CAs
 
-As the web transitions to quantum-resistant algorithms, standard certificates equipped with PQC signatures (like ML-DSA) balloon in size. This massive data overhead leads to TLS handshake fragmentation, high latency, and severe middlebox compatibility issues.
+This demo implements a sophisticated multi-CA hierarchy to address the challenges of large-scale Merkle Tree PKIs:
 
-Instead of bundling multiple massive signatures inside every certificate, MTCs introduce an elegant solution:
-1. **Batch Signing:** A Certificate Authority (CA) aggregates hundreds of certificates into a Merkle tree and signs only the root hash.
-2. **Inclusion Proofs:** Servers simply transmit a compact Merkle authentication path (an inclusion proof) to prove they are part of the CA's signed tree.
-3. **Validity Windows:** Clients verify the proofs against trusted checkpoints (signed validity windows) fetched out-of-band.
-
-The result? The internet gets quantum-level security without sacrificing the speed of modern TLS.
+1.  **Merkle Proof Chain:** Visualizes the entire cryptographic journey from CA public parameters to the final leaf assertion.
+2.  **Landmark CA (Intermediary):** Demonstrates how "Landmark" nodes can act as trusted cross-checkpoints, allowing for faster verification and smaller storage requirements on the client.
+3.  **Multi-Path Verification:** Compare the results of verifying a certificate against the Root CA vs. a Landmark CA in real-time.
 
 ## Features
 
-* **Automated PKI Generation:** Spin up a local Merkle Tree CA using Cloudflare's reference implementation in a single command.
-* **Certificate Issuance Simulation:** Automates the queueing and batch issuance of assertions into valid MTC artifacts (`.mtc`, `.vw`, and `ca-params`).
-* **TLS 1.3 Web Server:** A Go-based backend that enforces TLS 1.3 and statically exposes the generated MTC artifacts in a `/.well-known/mtc/` style structure.
-* **Live In-Browser Verification:** Real-time backend verification of the certificate's inclusion proof, mimicking an interoperable TLS client.
-* **Payload Decoder & Diagnostics:** Explore the internals of the experimental binary structures (CA Params, Validity Window, Certificate payload) right from the browser.
-* **Secure Containerization:** Containerized using an ultra-hardened, zero-CVE Chainguard distroless base image for the absolute minimum attack surface.
-* **Multi-Arch CI Pipeline:** Fully automated GitHub Actions workflow to build the secure container concurrently across `linux/amd64` and `linux/arm64` via QEMU and Buildx.
+* **Multi-CA Infrastructure:** Root CA + Landmark CA cross-verification simulation.
+* **Live Proof Chain Visualization:** Real-time visual trace of the Merkle inclusion proof.
+* **Performance-Optimized Diagnostics:** Smart truncation for 300k+ tree head validity windows.
+* **TLS 1.3 Enforcement:** All communication secured with modern TLS 1.3.
+* **Interactive Payload Decoder:** Real-time binary structure parsing (CA Params, VW, MTC).
+* **Chainguard Hardened:** Built on zero-CVE distroless images for maximum security.
 
-![Payload Diagnostics & Decoded Views](./demo/screenshots/diagnostics.png)
+![Proof Chain Visualization](./demo/screenshots/04_proof_chain.png)
 
 ## Running with Docker Compose (Recommended)
 
-The easiest way to run the entire demonstration is using **Docker Compose**, which orchestrates two separate containers:
+The easiest way to run the entire demonstration is using **Docker Compose**:
+
 1. **`mtc-demo-website`**: The main MTC demonstration UI (Port 8443).
-2. **`mtc-playground`**: The interactive DigiCert MTC Playground dashboard (Port 8444).
+2. **`mtc-playground`**: Interactive MTC generation playground (Port 8444).
 
 ```bash
-# Build and start both services
 docker compose up --build -d
 ```
 
-Once the containers are healthy, open your browser to:
-* **MTC Demo Website (HTTPS):** `https://localhost:8443`
-* **DigiCert MTC Playground (HTTPS):** `https://localhost:8444`
+Open:
+* **MTC Demo Website:** `https://localhost:8443`
+* **MTC Playground:** `https://localhost:8444`
 
-To view logs:
-```bash
-docker compose logs -f
-```
-
-## DigiCert MTC Playground
-
-In addition to the main demo, we have integrated the **DigiCert MTC Playground** dashboard. This interface provides an interactive environment to generate and verify MTC certificates in two distinct modes:
-
-1. **MTC-Spec (Primary):** Implements the `id-alg-mtcProof` signature algorithm, where the inclusion proof is carried directly in the `signatureValue` field.
-2. **Legacy Embedded (Compatibility):** Embeds the MTC inclusion proof as a non-critical X.509 extension for backward compatibility with existing systems.
-
-![DigiCert MTC Playground Dashboard](./demo/screenshots/playground_dashboard.png)
+![Landmark CA Verification](./demo/screenshots/03_verify_landmark.png)
 
 
 ## Quick Start
