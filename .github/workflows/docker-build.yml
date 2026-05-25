@@ -8,7 +8,16 @@ on:
 
 jobs:
   build:
+    name: Build (${{ matrix.target.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - name: website
+            target: demo-runtime
+          - name: playground
+            target: playground-runtime
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,7 +32,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: ${{ matrix.target.target }}
           platforms: linux/amd64,linux/arm64
-          # push: true # Uncomment this to push to a registry. For now, it just verifies the build.
           push: false
-          tags: mtc-demo:latest
+          tags: mtc-${{ matrix.target.name }}:latest
+

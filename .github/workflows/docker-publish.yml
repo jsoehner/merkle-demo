@@ -27,8 +27,18 @@ concurrency:
 
 jobs:
   build-and-push:
-    name: Build & Push (multi-arch)
+    name: Build & Push (${{ matrix.target.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - name: website
+            target: demo-runtime
+            image-suffix: -website
+          - name: playground
+            target: playground-runtime
+            image-suffix: -playground
 
     permissions:
       contents: read
@@ -72,8 +82,8 @@ jobs:
         with:
           # Publish to both Docker Hub and GHCR simultaneously
           images: |
-            ${{ secrets.DOCKER_USERNAME }}/merkle-demo
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ secrets.DOCKER_USERNAME }}/merkle-demo${{ matrix.target.image-suffix }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.target.image-suffix }}
           tags: |
             # semver: v1.2.3 → 1.2.3, 1.2, 1
             type=semver,pattern={{version}}
@@ -88,6 +98,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          target: ${{ matrix.target.target }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -99,7 +110,8 @@ jobs:
       # ── 7. Summary ────────────────────────────────────────────────────────
       - name: Print published tags
         run: |
-          echo "### 🐳 Published Docker Tags" >> $GITHUB_STEP_SUMMARY
+          echo "### 🐳 Published Docker Tags (${{ matrix.target.name }})" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+
