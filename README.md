@@ -44,6 +44,20 @@ Open:
 * **MTC Demo Website:** `https://localhost:8443`
 * **MTC Playground:** `https://localhost:8444`
 
+## Running from Docker Hub (No Local Build Required)
+
+If you prefer to run the pre-built images directly from Docker Hub without building them locally, use the provided helper script:
+
+```bash
+# Run with the default Docker Hub username (jsoehner) and latest tag
+./run-from-hub.sh
+
+# Or specify a custom Docker Hub username and tag
+./run-from-hub.sh <username> <tag>
+```
+
+This script will pull the images, recreate the shared volume, start the services in detached mode, and wait for them to pass health checks.
+
 ![Landmark CA Verification](./demo/screenshots/03_verify_landmark.png)
 
 
