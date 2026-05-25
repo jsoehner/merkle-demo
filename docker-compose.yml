@@ -7,7 +7,7 @@ services:
     ports:
       - "8443:8443"
     volumes:
-      - shared-artifacts:/app/demo
+      - shared-artifacts:/app/shared-artifacts
     healthcheck:
       # Simple bash check to see if the port is listening
       # We explicitly use --tlsv1.3 since the server forces it
@@ -26,7 +26,7 @@ services:
     ports:
       - "8444:8444"
     volumes:
-      - shared-artifacts:/app/demo:ro
+      - shared-artifacts:/app/shared-artifacts:ro
     environment:
       - PLAYGROUND_BIN_DIR=/usr/local/bin
     depends_on:

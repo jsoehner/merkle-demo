@@ -110,5 +110,14 @@ $MTC_CLI inspect -ca-params ca/www/mtc/v04b/ca-params cert website.mtc
 echo ""
 echo "=== DIAGNOSTICS: Live Verification ==="
 $MTC_CLI verify -ca-params ca/www/mtc/v04b/ca-params -validity-window website.vw website.mtc && echo "Root CA Verification PASSED ✅" || echo "Root CA Verification FAILED ❌"
-echo ""
+# Copy generated payloads to the shared volume mount
+if [ -d "/app/shared-artifacts" ]; then
+  echo "Copying generated artifacts to /app/shared-artifacts..."
+  mkdir -p /app/shared-artifacts/ca/www/mtc/v04b /app/shared-artifacts/landmark-ca/www/mtc/v04b
+  cp website.pem website.key website.vw website.mtc landmark.vw landmark-website.mtc landmark.mtc /app/shared-artifacts/ 2>/dev/null || true
+  cp ca/www/mtc/v04b/ca-params /app/shared-artifacts/ca/www/mtc/v04b/ 2>/dev/null || true
+  cp landmark-ca/www/mtc/v04b/ca-params /app/shared-artifacts/landmark-ca/www/mtc/v04b/ 2>/dev/null || true
+fi
+
 echo "All payloads generated and ready."
+

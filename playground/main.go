@@ -376,10 +376,15 @@ func main() {
 	certFile := "website.pem"
 	keyFile := "website.key"
 
-	// Fallback to demo directory if not in current
+	// Fallback to shared-artifacts or demo directory if not in current
 	if _, err := os.Stat(certFile); os.IsNotExist(err) {
-		certFile = "../demo/website.pem"
-		keyFile = "../demo/website.key"
+		if _, errShared := os.Stat("/app/shared-artifacts/website.pem"); errShared == nil {
+			certFile = "/app/shared-artifacts/website.pem"
+			keyFile = "/app/shared-artifacts/website.key"
+		} else {
+			certFile = "../demo/website.pem"
+			keyFile = "../demo/website.key"
+		}
 	}
 
 	log.Fatal(server.ListenAndServeTLS(certFile, keyFile))
