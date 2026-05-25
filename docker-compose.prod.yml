@@ -1,0 +1,38 @@
+services:
+  demo:
+    image: ${DOCKER_USER:-jsoehner}/merkle-demo-website:${TAG:-latest}
+    container_name: mtc-demo-website
+    ports:
+      - "8443:8443"
+    volumes:
+      - shared-artifacts:/app/shared-artifacts
+    healthcheck:
+      test: ["CMD", "curl", "-k", "--tlsv1.3", "https://127.0.0.1:8443/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  playground:
+    image: ${DOCKER_USER:-jsoehner}/merkle-demo-playground:${TAG:-latest}
+    container_name: mtc-playground
+    ports:
+      - "8444:8444"
+    volumes:
+      - shared-artifacts:/app/shared-artifacts:ro
+    environment:
+      - PLAYGROUND_BIN_DIR=/usr/local/bin
+    depends_on:
+      demo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-k", "--tlsv1.3", "https://127.0.0.1:8444/api/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  shared-artifacts:
