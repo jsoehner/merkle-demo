@@ -11,13 +11,15 @@ WORKDIR /app
 # ── 1. Clone and build the upstream MTC library (bwesterb/mtc)
 RUN git clone --depth=1 https://github.com/bwesterb/mtc.git mtc && \
     cd mtc && \
-    go mod download && \
+    go get -u golang.org/x/crypto && \
+    go mod tidy && \
     CGO_ENABLED=0 go build -v -o /app/mtc-cli ./cmd/mtc
 
 # ── 2. Clone and build DigiCert playground standalone tools
 RUN git clone --depth=1 https://github.com/digicert/ca-extension-mtc-playground.git ca-extension-mtc-playground && \
     cd ca-extension-mtc-playground && \
-    go mod download && \
+    go get -u golang.org/x/crypto && \
+    go mod tidy && \
     CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/demo-embedded-cert ./cmd/demo-embedded-cert/ && \
     CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/mtc-verify-cert    ./cmd/mtc-verify-cert/ && \
     CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/mtc-conformance    ./cmd/mtc-conformance/ && \
