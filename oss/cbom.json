@@ -1,0 +1,108 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:auto-generated-cbom",
+  "version": 1,
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "name": "ML-DSA-65",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "name": "ML-DSA-65",
+          "primitive": "signature",
+          "parameterSetIdentifier": "N/A",
+          "executionEnvironment": "software-plain-ram"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "playground/main.go:324",
+            "snippet": "\"verification\": \"signatureless (landmark root hash) or signed (Ed25519 / ML-DSA cosigners)\","
+          },
+          {
+            "location": "playground/main.go:332",
+            "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8"
+          }
+        ]
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "name": "Ed25519",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "name": "Ed25519",
+          "primitive": "signature",
+          "parameterSetIdentifier": "25519",
+          "executionEnvironment": "software-plain-ram"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "playground/main.go:324",
+            "snippet": "\"verification\": \"signatureless (landmark root hash) or signed (Ed25519 / ML-DSA cosigners)\","
+          },
+          {
+            "location": "playground/main.go:332",
+            "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8"
+          }
+        ]
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "name": "ECDSA-P256",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "name": "ECDSA-P256",
+          "primitive": "signature",
+          "parameterSetIdentifier": "secp256r1",
+          "executionEnvironment": "software-plain-ram"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "playground/main.go:332",
+            "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8"
+          }
+        ]
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "name": "SHA-256",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "name": "SHA-256",
+          "primitive": "hash",
+          "parameterSetIdentifier": "256",
+          "executionEnvironment": "software-plain-ram"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "playground/main.go:332",
+            "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8"
+          },
+          {
+            "location": "playground/main.go:334",
+            "snippet": "\"leaf_hash\": \"SHA-256(0x00 \u2225 data)\","
+          },
+          {
+            "location": "playground/main.go:335",
+            "snippet": "\"node_hash\": \"SHA-256(0x01 \u2225 left \u2225 right)\","
+          }
+        ]
+      }
+    }
+  ]
+}

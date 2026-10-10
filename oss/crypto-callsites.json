@@ -1,0 +1,82 @@
+[
+  {
+    "file": "playground/main.go",
+    "line": 324,
+    "snippet": "\"verification\": \"signatureless (landmark root hash) or signed (Ed25519 / ML-DSA cosigners)\",",
+    "name": "ML-DSA-65",
+    "primitive": "signature",
+    "pqc_status": "POST-QUANTUM READY",
+    "parameter_set": "N/A",
+    "standard": "NIST FIPS 204"
+  },
+  {
+    "file": "playground/main.go",
+    "line": 324,
+    "snippet": "\"verification\": \"signatureless (landmark root hash) or signed (Ed25519 / ML-DSA cosigners)\",",
+    "name": "Ed25519",
+    "primitive": "signature",
+    "pqc_status": "QUANTUM-VULNERABLE",
+    "parameter_set": "25519",
+    "standard": "Classical"
+  },
+  {
+    "file": "playground/main.go",
+    "line": 332,
+    "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8",
+    "name": "ML-DSA-65",
+    "primitive": "signature",
+    "pqc_status": "POST-QUANTUM READY",
+    "parameter_set": "N/A",
+    "standard": "NIST FIPS 204"
+  },
+  {
+    "file": "playground/main.go",
+    "line": 332,
+    "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8",
+    "name": "ECDSA-P256",
+    "primitive": "signature",
+    "pqc_status": "QUANTUM-VULNERABLE",
+    "parameter_set": "secp256r1",
+    "standard": "Classical"
+  },
+  {
+    "file": "playground/main.go",
+    "line": 332,
+    "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8",
+    "name": "Ed25519",
+    "primitive": "signature",
+    "pqc_status": "QUANTUM-VULNERABLE",
+    "parameter_set": "25519",
+    "standard": "Classical"
+  },
+  {
+    "file": "playground/main.go",
+    "line": 332,
+    "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8",
+    "name": "SHA-256",
+    "primitive": "hash",
+    "pqc_status": "CLASSICAL/SYMMETRIC",
+    "parameter_set": "256",
+    "standard": "Classical"
+  },
+  {
+    "file": "playground/main.go",
+    "line": 334,
+    "snippet": "\"leaf_hash\": \"SHA-256(0x00 \u2225 data)\",",
+    "name": "SHA-256",
+    "primitive": "hash",
+    "pqc_status": "CLASSICAL/SYMMETRIC",
+    "parameter_set": "256",
+    "standard": "Classical"
+  },
+  {
+    "file": "playground/main.go",
+    "line": 335,
+    "snippet": "\"node_hash\": \"SHA-256(0x01 \u2225 left \u2225 right)\",",
+    "name": "SHA-256",
+    "primitive": "hash",
+    "pqc_status": "CLASSICAL/SYMMETRIC",
+    "parameter_set": "256",
+    "standard": "Classical"
+  }
+]
