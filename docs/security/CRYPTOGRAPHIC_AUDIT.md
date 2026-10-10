@@ -17,38 +17,12 @@
 |---|---|---|---|---|
 | `ML-DSA-65` | signature | N/A | NIST FIPS 204 (ML-DSA) | `playground/main.go:324`<br>`playground/main.go:332` |
 
-### ⚠️ Quantum-Vulnerable Assets (Action Required)
+### ⚠️ Quantum-Vulnerable Assets & Remediation Plan
 
-| Component / Asset Name | Asset Type | Primitive / Algorithm | Key Length / Curve | Recommended PQC Replacement | Location(s) |
-|---|---|---|---|---|---|
-| `Ed25519` | algorithm | Ed25519 | 25519 | **ML-DSA-65 / Dilithium (FIPS 204)** | `playground/main.go:324`<br>`playground/main.go:332` |
-| `ECDSA-P256` | algorithm | ECDSA-P256 | secp256r1 | **ML-DSA-65 / Dilithium (FIPS 204)** | `playground/main.go:332` |
-
-### 🛠️ Developer & Security Remediation Guide
-
-The following source code locations require cryptographic migration before quantum computing milestones:
-
-#### `Ed25519` (signature)
-- **Current Algorithm**: `Ed25519` (Key/Curve: `25519`)
-- **Recommended Target**: **ML-DSA-65 / Dilithium (NIST FIPS 204)**
-- **Call Sites / Instantiations**:
-  - `playground/main.go:324`:
-    ```
-    "verification": "signatureless (landmark root hash) or signed (Ed25519 / ML-DSA cosigners)",
-    ```
-  - `playground/main.go:332`:
-    ```
-    "algorithms": []string{"ECDSA P-256 (key generation)", "SHA-256 (Merkle hashing)", "Ed25519 (cosigner)", "ML-DSA-44/65/8
-    ```
-
-#### `ECDSA-P256` (signature)
-- **Current Algorithm**: `ECDSA-P256` (Key/Curve: `secp256r1`)
-- **Recommended Target**: **ML-DSA-65 / Dilithium (NIST FIPS 204)**
-- **Call Sites / Instantiations**:
-  - `playground/main.go:332`:
-    ```
-    "algorithms": []string{"ECDSA P-256 (key generation)", "SHA-256 (Merkle hashing)", "Ed25519 (cosigner)", "ML-DSA-44/65/8
-    ```
+| Component / Algorithm | Type / Primitive | Key Length / Curve | Recommended Target | Source Location(s) & Code Context |
+|---|---|---|---|---|
+| **`Ed25519`**<br><sub>Ed25519</sub> | algorithm / signature | 25519 | **ML-DSA-65 / Dilithium (FIPS 204)** | `playground/main.go:324`<br><sub><code>"verification": "signatureless (landmark root hash) or signed (Ed25519 / ML-DSA cosigners)",</code></sub><br><br>`playground/main.go:332`<br><sub><code>"algorithms": []string{"ECDSA P-256 (key generation)", "SHA-256 (Merkle hashing)", "Ed25519 (cosigner)", "ML-DSA-44/65/8</code></sub> |
+| **`ECDSA-P256`**<br><sub>ECDSA-P256</sub> | algorithm / signature | secp256r1 | **ML-DSA-65 / Dilithium (FIPS 204)** | `playground/main.go:332`<br><sub><code>"algorithms": []string{"ECDSA P-256 (key generation)", "SHA-256 (Merkle hashing)", "Ed25519 (cosigner)", "ML-DSA-44/65/8</code></sub> |
 
 ### 🔒 Classical Symmetric & Digest Assets
 
