@@ -101,7 +101,11 @@ Once loaded, click **"Verify Merkle Tree Certificate"** to perform a live inclus
 /
 ├── docker-compose.yml   # Multi-container orchestration
 ├── Dockerfile           # Secure multi-stage build with multiple runtime targets
-├── .github/workflows/   # Multi-arch CI pipeline via QEMU/Buildx
+├── .github/workflows/   # CI/CD pipelines (MTC buildx, security audit, SBOM/CBOM)
+├── docs/
+│   ├── adr/             # Architecture Decision Records (ADR-0001, ADR-0002)
+│   └── security/        # Cryptographic audit & PQC migration reports
+├── scripts/             # SBOM/CBOM generators, AST crypto scanner, and test harness
 ├── demo/                # Main MTC Demonstration
 │   ├── setup.sh         # Automates CA creation and certificate issuance
 │   ├── main.go          # The Go TLS 1.3 Web Server and verification API
@@ -117,3 +121,62 @@ When you click the "Verify" button on the UI, the Go backend executes the refere
 mtc-cli verify -ca-params <ca-params> -validity-window <website.vw> <website.mtc>
 ```
 If the certificate's authentication path successfully hashes up to the tree head checkpoint listed in the validity window, the certificate is implicitly trusted without requiring its own bulky PQC signature!
+
+## Automated SBOM & CBOM Supply Chain Pipeline
+
+This repository implements an automated, dual-engine Software Bill of Materials (SBOM) and Cryptographic Bill of Materials (CBOM) supply chain governance pipeline in compliance with Executive Order 14028, NIST SP 800-218 (SSDF), and NIST IR 8547 PQC transition guidelines.
+
+For full architectural context, evaluation criteria, and trade-offs, see [ADR-0002: Automated SBOM and CBOM Supply Chain Governance Pipeline](docs/adr/0002-automated-sbom-cbom-supply-chain-governance.md).
+
+### CI/CD Workflow Stages (`.github/workflows/sbom-cbom.yml`)
+
+The automated GitHub Actions workflow executes across standard pull request and push triggers:
+
+1. **Dual SBOM Generation (Anchore / Syft):** Produces both CycloneDX JSON (`oss/sbom.cyclonedx.json`) and SPDX JSON (`oss/sbom.spdx.json`) dependency inventories.
+2. **CBOM Generation (`cbomkit-action`):** Generates CycloneDX 1.6 Cryptographic Bill of Materials (`oss/cbom.json`) capturing cryptographic primitives, certificates, and protocol configurations.
+3. **Semantic AST Cryptographic Scanning (`scripts/scan_crypto_ast.py`):** Parses Go and backend source code ASTs to identify cryptographic instantiations and call sites, reconciling them directly into the CBOM inventory (`oss/crypto-callsites.json`).
+4. **Automated Verification Test Harness (`scripts/test_boms.sh`):** Strict CI gate verifying valid JSON syntax, CycloneDX schema conformance, and non-empty cryptographic component counts.
+5. **PQC Migration Readiness Assessment (`scripts/analyze_cbom.py`):** Audits cryptographic assets against NIST Post-Quantum Cryptography standards (ML-KEM, ML-DSA, SLH-DSA vs. quantum-vulnerable RSA/ECC) and publishes a GitHub Actions Step Summary.
+6. **Continuous Governance Publishing:** Publishes cryptographic audit summaries to `docs/security/CRYPTOGRAPHIC_AUDIT.md` on `main` branch pushes.
+7. **Artifact Archiving:** Uploads all generated BOM artifacts with 90-day retention.
+
+### Local Tooling & Developer CLI (`scripts/`)
+
+Developers can run the exact same generation, analysis, and verification steps locally:
+
+* **Generate BOMs locally:**
+  ```bash
+  # Scan source directory
+  bash scripts/generate_boms.sh -t dir .
+
+  # Scan container image
+  bash scripts/generate_boms.sh -t docker merkle-demo:local
+  ```
+
+* **Semantic AST Cryptographic Scan & Reconciliation:**
+  ```bash
+  python3 scripts/scan_crypto_ast.py . --cbom oss/cbom.json --output-json oss/crypto-callsites.json
+  ```
+
+* **Run BOM Verification Test Harness:**
+  ```bash
+  bash scripts/test_boms.sh oss
+  ```
+
+* **Analyze CBOM & PQC Readiness Dashboard:**
+  ```bash
+  python3 scripts/analyze_cbom.py oss/cbom.json \
+    --sbom oss/sbom.cyclonedx.json \
+    --markdown docs/security/CRYPTOGRAPHIC_AUDIT.md \
+    --json oss/crypto-analysis.json
+  ```
+
+* **OCI Referrers & Attestation Utilities:**
+  ```bash
+  # Query OCI 1.1 CBOM referrers without pulling image layers
+  python3 scripts/fetch_oci_cbom.py <IMAGE_REF> -o oss/upstream_cbom.json
+
+  # Attach generated CBOM artifact to an OCI registry via ORAS
+  bash scripts/attach_oci_bom.sh oss/cbom.json <IMAGE_REF>
+  ```
+

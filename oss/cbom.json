@@ -25,6 +25,106 @@
           {
             "location": "playground/main.go:332",
             "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8"
+          },
+          {
+            "location": "mtc/signature.go:14",
+            "snippet": "mldsa \"github.com/cloudflare/circl/sign/mldsa/mldsa87\""
+          },
+          {
+            "location": "mtc/signature.go:77",
+            "snippet": "type mldsaVerifier mldsa.PublicKey"
+          },
+          {
+            "location": "mtc/signature.go:80",
+            "snippet": "var ret [mldsa.PublicKeySize]byte"
+          },
+          {
+            "location": "mtc/signature.go:81",
+            "snippet": "(*mldsa.PublicKey)(v).Pack(&ret)"
+          },
+          {
+            "location": "mtc/signature.go:86",
+            "snippet": "if mldsa.Verify((*mldsa.PublicKey)(v), msg, nil, sig) {"
+          },
+          {
+            "location": "mtc/signature.go:90",
+            "snippet": "return errors.New(\"ML-DSA verification failed\")"
+          },
+          {
+            "location": "mtc/signature.go:151",
+            "snippet": "dpk, ok := pk.(*mldsa.PublicKey)"
+          },
+          {
+            "location": "mtc/signature.go:153",
+            "snippet": "return nil, errors.New(\"Expected *mldsa.PublicKey\")"
+          },
+          {
+            "location": "mtc/signature.go:199",
+            "snippet": "buf [mldsa.PublicKeySize]byte"
+          },
+          {
+            "location": "mtc/signature.go:200",
+            "snippet": "pk  mldsa.PublicKey"
+          },
+          {
+            "location": "mtc/signature.go:202",
+            "snippet": "if len(data) != mldsa.PublicKeySize {"
+          },
+          {
+            "location": "mtc/signature.go:203",
+            "snippet": "return nil, errors.New(\"Wrong length for ML-DSA-87 public key\")"
+          },
+          {
+            "location": "mtc/signature.go:220",
+            "snippet": "type mldsaSigner mldsa.PrivateKey"
+          },
+          {
+            "location": "mtc/signature.go:223",
+            "snippet": "var ret [mldsa.PrivateKeySize]byte"
+          },
+          {
+            "location": "mtc/signature.go:224",
+            "snippet": "(*mldsa.PrivateKey)(s).Pack(&ret)"
+          },
+          {
+            "location": "mtc/signature.go:229",
+            "snippet": "var sig [mldsa.SignatureSize]byte"
+          },
+          {
+            "location": "mtc/signature.go:230",
+            "snippet": "err := mldsa.SignTo((*mldsa.PrivateKey)(s), msg, nil, false, sig[:])"
+          },
+          {
+            "location": "mtc/signature.go:247",
+            "snippet": "buf [mldsa.PrivateKeySize]byte"
+          },
+          {
+            "location": "mtc/signature.go:248",
+            "snippet": "sk  mldsa.PrivateKey"
+          },
+          {
+            "location": "mtc/signature.go:250",
+            "snippet": "if len(data) != mldsa.PrivateKeySize {"
+          },
+          {
+            "location": "mtc/signature.go:251",
+            "snippet": "return nil, errors.New(\"Wrong length for ML-DSA private key\")"
+          },
+          {
+            "location": "mtc/signature.go:269",
+            "snippet": "pk, sk, err := mldsa.GenerateKey(nil)"
+          },
+          {
+            "location": "mtc/signature.go:296",
+            "snippet": "return \"ml-dsa-87\""
+          },
+          {
+            "location": "mtc/signature.go:315",
+            "snippet": "case \"ml-dsa-87\":"
+          },
+          {
+            "location": "mtc/signature.go:344",
+            "snippet": "case *mldsa.PublicKey:"
           }
         ]
       }
@@ -50,6 +150,74 @@
           {
             "location": "playground/main.go:332",
             "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8"
+          },
+          {
+            "location": "mtc/mtc_test.go:5",
+            "snippet": "\"crypto/ed25519\""
+          },
+          {
+            "location": "mtc/mtc_test.go:59",
+            "snippet": "var seed [ed25519.SeedSize]byte"
+          },
+          {
+            "location": "mtc/mtc_test.go:65",
+            "snippet": "privEd := ed25519.NewKeyFromSeed(seed[:])"
+          },
+          {
+            "location": "mtc/signature.go:6",
+            "snippet": "\"crypto/ed25519\""
+          },
+          {
+            "location": "mtc/signature.go:42",
+            "snippet": "type ed25519Verifier ed25519.PublicKey"
+          },
+          {
+            "location": "mtc/signature.go:45",
+            "snippet": "ret := make([]byte, ed25519.PublicKeySize)"
+          },
+          {
+            "location": "mtc/signature.go:51",
+            "snippet": "if ed25519.Verify((ed25519.PublicKey)(v), msg, sig) {"
+          },
+          {
+            "location": "mtc/signature.go:54",
+            "snippet": "return errors.New(\"ed25519 verification failed\")"
+          },
+          {
+            "location": "mtc/signature.go:135",
+            "snippet": "epk, ok := pk.(ed25519.PublicKey)"
+          },
+          {
+            "location": "mtc/signature.go:136",
+            "snippet": "if !ok || len(epk) != ed25519.PublicKeySize {"
+          },
+          {
+            "location": "mtc/signature.go:137",
+            "snippet": "return nil, errors.New(\"Expected ed25519.PublicKey\")"
+          },
+          {
+            "location": "mtc/signature.go:176",
+            "snippet": "if len(data) != ed25519.PublicKeySize {"
+          },
+          {
+            "location": "mtc/signature.go:177",
+            "snippet": "return nil, errors.New(\"Wrong length for ed25519 public key\")"
+          },
+          {
+            "location": "mtc/signature.go:179",
+            "snippet": "ret := make([]byte, ed25519.PublicKeySize)"
+          },
+          {
+            "location": "mtc/signature.go:294",
+            "snippet": "return \"ed25519\""
+          },
+          {
+            "location": "mtc/signature.go:317",
+            "snippet": "case \"ed25519\":"
+          },
+          {
+            "location": "mtc/signature.go:342",
+            "snippet": "case ed25519.PublicKey:"
           }
         ]
       }
@@ -71,6 +239,54 @@
           {
             "location": "playground/main.go:332",
             "snippet": "\"algorithms\": []string{\"ECDSA P-256 (key generation)\", \"SHA-256 (Merkle hashing)\", \"Ed25519 (cosigner)\", \"ML-DSA-44/65/8"
+          },
+          {
+            "location": "mtc/signature.go:5",
+            "snippet": "\"crypto/ecdsa\""
+          },
+          {
+            "location": "mtc/signature.go:58",
+            "snippet": "pk     *ecdsa.PublicKey"
+          },
+          {
+            "location": "mtc/signature.go:71",
+            "snippet": "if ecdsa.VerifyASN1(v.pk, hashed, sig) {"
+          },
+          {
+            "location": "mtc/signature.go:74",
+            "snippet": "return errors.New(\"ecdsa verification failed\")"
+          },
+          {
+            "location": "mtc/signature.go:141",
+            "snippet": "epk, ok := pk.(*ecdsa.PublicKey)"
+          },
+          {
+            "location": "mtc/signature.go:143",
+            "snippet": "return nil, errors.New(\"Expected *ecdsa.PublicKey\")"
+          },
+          {
+            "location": "mtc/signature.go:186",
+            "snippet": "return nil, errors.New(\"Failed to unmarshal ecdsa public key\")"
+          },
+          {
+            "location": "mtc/signature.go:190",
+            "snippet": "pk: &ecdsa.PublicKey{"
+          },
+          {
+            "location": "mtc/signature.go:332",
+            "snippet": "case *ecdsa.PublicKey:"
+          },
+          {
+            "location": "mtc/signature.go:334",
+            "snippet": "case \"P-256\":"
+          },
+          {
+            "location": "mtc/ca/ca_test.go:4",
+            "snippet": "\"crypto/ecdsa\""
+          },
+          {
+            "location": "mtc/ca/ca_test.go:71",
+            "snippet": "sk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)"
           }
         ]
       }
@@ -100,6 +316,238 @@
           {
             "location": "playground/main.go:335",
             "snippet": "\"node_hash\": \"SHA-256(0x01 \u2225 left \u2225 right)\","
+          },
+          {
+            "location": "mtc/mtc.go:6",
+            "snippet": "\"crypto/sha256\""
+          },
+          {
+            "location": "mtc/mtc.go:934",
+            "snippet": "PublicKeyHash:   sha256.Sum256([]byte(publicKey)),"
+          },
+          {
+            "location": "mtc/mtc.go:1171",
+            "snippet": "ar.Checksum = make([]byte, sha256.Size)"
+          },
+          {
+            "location": "mtc/mtc.go:1224",
+            "snippet": "checksum2 := sha256.Sum256(checksumBytes)"
+          },
+          {
+            "location": "mtc/mtc.go:1380",
+            "snippet": "h := sha256.New()"
+          },
+          {
+            "location": "mtc/mtc.go:1405",
+            "snippet": "h := sha256.New()"
+          },
+          {
+            "location": "mtc/mtc.go:1534",
+            "snippet": "h := sha256.New()"
+          },
+          {
+            "location": "mtc/mtc.go:1563",
+            "snippet": "h := sha256.New()"
+          },
+          {
+            "location": "mtc/signature.go:9",
+            "snippet": "\"crypto/sha256\""
+          },
+          {
+            "location": "mtc/signature.go:96",
+            "snippet": "return crypto.SHA256, nil"
+          },
+          {
+            "location": "mtc/signature.go:282",
+            "snippet": "return \"rsa-sha256\""
+          },
+          {
+            "location": "mtc/signature.go:303",
+            "snippet": "case \"rsa-sha256\":"
+          },
+          {
+            "location": "mtc/signature.go:353",
+            "snippet": "h := sha256.Sum256(buf)"
+          },
+          {
+            "location": "mtc/ca/ca.go:6",
+            "snippet": "\"crypto/sha256\""
+          },
+          {
+            "location": "mtc/ca/ca.go:651",
+            "snippet": "h := sha256.New()"
+          },
+          {
+            "location": "mtc/ca/ca.go:677",
+            "snippet": "hasher := sha256.New()"
+          },
+          {
+            "location": "mtc/umbilical/frozencas/frozencas.go:42",
+            "snippet": "\"crypto/sha256\""
+          },
+          {
+            "location": "mtc/umbilical/frozencas/frozencas.go:271",
+            "snippet": "h:      sha256.New(),"
+          }
+        ]
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "name": "RSA-2048",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "name": "RSA-2048",
+          "primitive": "signature",
+          "parameterSetIdentifier": "2048",
+          "executionEnvironment": "software-plain-ram"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "mtc/mtc_test.go:6",
+            "snippet": "\"crypto/rsa\""
+          },
+          {
+            "location": "mtc/mtc_test.go:211",
+            "snippet": "pubRSA := &rsa.PublicKey{"
+          },
+          {
+            "location": "mtc/signature.go:8",
+            "snippet": "\"crypto/rsa\""
+          },
+          {
+            "location": "mtc/signature.go:25",
+            "snippet": "pk     *rsa.PublicKey"
+          },
+          {
+            "location": "mtc/signature.go:38",
+            "snippet": "signOpts := &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash}"
+          },
+          {
+            "location": "mtc/signature.go:39",
+            "snippet": "return rsa.VerifyPSS(v.pk, v.hash, hashed, sig, signOpts)"
+          },
+          {
+            "location": "mtc/signature.go:128",
+            "snippet": "rpk, ok := pk.(*rsa.PublicKey)"
+          },
+          {
+            "location": "mtc/signature.go:130",
+            "snippet": "return nil, errors.New(\"Expected *rsa.PublicKey\")"
+          },
+          {
+            "location": "mtc/signature.go:282",
+            "snippet": "return \"rsa-sha256\""
+          },
+          {
+            "location": "mtc/signature.go:284",
+            "snippet": "return \"rsa-sha384\""
+          },
+          {
+            "location": "mtc/signature.go:286",
+            "snippet": "return \"rsa-sha512\""
+          },
+          {
+            "location": "mtc/signature.go:303",
+            "snippet": "case \"rsa-sha256\":"
+          },
+          {
+            "location": "mtc/signature.go:305",
+            "snippet": "case \"rsa-sha384\":"
+          },
+          {
+            "location": "mtc/signature.go:307",
+            "snippet": "case \"rsa-sha512\":"
+          },
+          {
+            "location": "mtc/signature.go:326",
+            "snippet": "case *rsa.PublicKey:"
+          }
+        ]
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "name": "SHA-3",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "name": "SHA-3",
+          "primitive": "hash",
+          "parameterSetIdentifier": "256",
+          "executionEnvironment": "software-plain-ram"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "mtc/mtc_test.go:16",
+            "snippet": "\"golang.org/x/crypto/sha3\""
+          },
+          {
+            "location": "mtc/mtc_test.go:61",
+            "snippet": "h := sha3.NewShake128()"
+          }
+        ]
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "name": "SHA-384",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "name": "SHA-384",
+          "primitive": "hash",
+          "parameterSetIdentifier": "384",
+          "executionEnvironment": "software-plain-ram"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "mtc/signature.go:98",
+            "snippet": "return crypto.SHA384, nil"
+          },
+          {
+            "location": "mtc/signature.go:284",
+            "snippet": "return \"rsa-sha384\""
+          },
+          {
+            "location": "mtc/signature.go:305",
+            "snippet": "case \"rsa-sha384\":"
+          }
+        ]
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "name": "SHA-512",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "name": "SHA-512",
+          "primitive": "hash",
+          "parameterSetIdentifier": "512",
+          "executionEnvironment": "software-plain-ram"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "mtc/signature.go:100",
+            "snippet": "return crypto.SHA512, nil"
+          },
+          {
+            "location": "mtc/signature.go:286",
+            "snippet": "return \"rsa-sha512\""
+          },
+          {
+            "location": "mtc/signature.go:307",
+            "snippet": "case \"rsa-sha512\":"
           }
         ]
       }
