@@ -59,6 +59,6 @@
 | `cbomkit/cbomkit-action` | v2.3.0 | `pkg:github/cbomkit/cbomkit-action@v2.3.0` | 🟡 Unassimilated (No upstream CBOM) |
 | `demo` | UNKNOWN | `pkg:golang/demo` | 🟡 Unassimilated (No upstream CBOM) |
 | `demo` | v0.0.0-20260512205513-da76a94bef6b | `pkg:golang/demo@v0.0.0-20260512205513-da76a94bef6b` | 🟡 Unassimilated (No upstream CBOM) |
-| `docker/build-push-action` | v5 | `pkg:github/docker/build-push-action@v5` | 🟡 Unassimilated (No upstream CBOM) |
-| `docker/build-push-action` | v6 | `pkg:github/docker/build-push-action@v6` | 🟡 Unassimilated (No upstream CBOM) |
+| `docker/build-push-action` | v7 | `pkg:github/docker/build-push-action@v7` | 🟡 Unassimilated (No upstream CBOM) |
+| `docker/build-push-action` | v7 | `pkg:github/docker/build-push-action@v7` | 🟡 Unassimilated (No upstream CBOM) |
 | *... and 90 more unassimilated dependencies* | | | |
