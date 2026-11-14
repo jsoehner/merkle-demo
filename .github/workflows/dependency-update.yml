@@ -41,7 +41,7 @@ jobs:
 
       # ── 2. Go toolchain ───────────────────────────────────────────────────
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           # demo/go.mod is the only tracked module (mtc/ is gitignored)
           go-version-file: ${{ github.workspace }}/demo/go.mod
