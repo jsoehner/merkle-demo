@@ -47,8 +47,8 @@
 
 | Component Name | Primitive | Key Length | Quantum Resistance Assessment | Provenance / Location(s) |
 |---|---|---|---|---|
-| `TLS-1.3` | protocol | v1.3 | TLS 1.3 Transport (Enable hybrid X25519MLKEM768 via OpenSSL 3.5+) | First-Party Code (SAST/AST)<br>`demo/main.go:419`<br>`demo/main.go:420`<br>`playground/main.go:361`<br>`playground/main.go:362` |
 | `SHA-256` | hash | 256 | Quantum-Resistant (Grover's proof) | First-Party Code (SAST/AST)<br>`playground/main.go:332` |
+| `TLS-1.3` | protocol | v1.3 | TLS 1.3 Transport (Enable hybrid X25519MLKEM768 via OpenSSL 3.5+) | First-Party Code (SAST/AST)<br>`playground/main.go:361`<br>`playground/main.go:362`<br>`demo/main.go:419`<br>`demo/main.go:420` |
 | `golang.org/x/crypto (Go Symmetric AEAD, SHA-3 & KDFs (ChaCha20-Poly1305 / Argon2id / bcrypt / HKDF))` | block-cipher | 256 | Quantum-Resistant (Grover's proof) | Assimilated Upstream CBOM: Go Extended Cryptography & JWT/OAuth2 Specification<br>`Dependency: golang.org/x/crypto@v0.33.0` |
 | `golang.org/x/crypto (Go Symmetric AEAD, SHA-3 & KDFs (ChaCha20-Poly1305 / Argon2id / bcrypt / HKDF))` | block-cipher | 256 | Quantum-Resistant (Grover's proof) | Assimilated Upstream CBOM: Go Extended Cryptography & JWT/OAuth2 Specification<br>`Dependency: golang.org/x/crypto@v0.33.0` |
 | `golang.org/x/crypto (Go Symmetric AEAD, SHA-3 & KDFs (ChaCha20-Poly1305 / Argon2id / bcrypt / HKDF))` | block-cipher | 256 | Quantum-Resistant (Grover's proof) | Assimilated Upstream CBOM: Go Extended Cryptography & JWT/OAuth2 Specification<br>`Dependency: golang.org/x/crypto@v0.33.0` |
