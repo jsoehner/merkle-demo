@@ -5,6 +5,7 @@
 [![Go Web Server](https://img.shields.io/badge/Backend-Go_1.21+-00add8.svg)](#)
 [![Docker](https://img.shields.io/badge/Container-Chainguard_Hardened-2496ED.svg)](#)
 [![Multi-Arch](https://img.shields.io/badge/Architecture-amd64_%7C_arm64-ff69b4.svg)](#)
+[![Build Verified](https://img.shields.io/badge/Build_Verified-2026--11--20-brightgreen.svg)](docs/BUILD_VERIFICATION.md)
 
 This project provides a fully self-contained, automated demonstration of **Merkle Tree Certificates (MTC)**—an experimental Internet Engineering Task Force (IETF) architectural proposal designed to fix the severe performance bottlenecks caused by massive Post-Quantum Cryptography (PQC) signature sizes in standard TLS handshakes.
 
